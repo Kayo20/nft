@@ -135,7 +135,7 @@ export default function Landing() {
                 size="lg"
                 className="bg-pink-500 hover:bg-pink-600 text-white text-lg px-8 py-4"
               >
-                TF Token Fairlunch
+                TF Token Fairlaunch
               </Button>
             </a>
           </motion.div>
