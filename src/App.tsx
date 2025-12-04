@@ -9,6 +9,7 @@ import { Footer } from '@/components/layout/Footer';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Index from './pages/Index';
 import Landing from './pages/Landing';
+import WalletSetup from './pages/WalletSetup';
 import Inventory from './pages/Inventory';
 import Dashboard from './pages/Dashboard';
 import Shop from './pages/Shop';
@@ -30,6 +31,7 @@ const App = () => (
             <main className="pb-20 md:pb-0">
               <Routes>
                 <Route path="/" element={<Landing />} />
+                <Route path="/wallet-setup" element={<WalletSetup />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
                 <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
