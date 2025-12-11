@@ -1,0 +1,7 @@
+# Netlify Redirects Configuration
+# API routes to serverless functions
+/api/auth/* /.netlify/functions/auth-:splat 200
+/api/* /.netlify/functions/:splat 200
+
+# SPA catch-all - must be last
+/* /index.html 200

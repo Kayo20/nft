@@ -1,0 +1,332 @@
+import { useState, useEffect } from 'react';
+import React from 'react';
+import { useWallet } from '@/hooks/useWallet';
+import { useNFTs } from '@/hooks/useNFTs';
+import { useItems } from '@/hooks/useItems';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LandSlots } from '@/components/dashboard/LandSlots';
+import { SeasonBadge } from '@/components/dashboard/SeasonBadge';
+import { getUserBalances } from '@/lib/apiUser';
+import { motion } from 'framer-motion';
+import {
+  TreePine,
+  Coins,
+  Wallet,
+  ShoppingBag,
+  TrendingUp,
+  Droplets,
+  Sprout,
+  Bug,
+  Gift,
+  Zap,
+} from 'lucide-react';
+import { toast } from 'sonner';
+
+
+class DashboardErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: any, info: any) {
+    // You can log error here
+    // console.error(error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div className="text-red-600 text-center mt-10">Something went wrong in the Dashboard. Please refresh the page.</div>;
+    }
+    return this.props.children;
+  }
+}
+
+export default function Dashboard() {
+  const { wallet } = useWallet();
+  const demoAddress = wallet.address || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
+  const { nfts: allNFTs, isLoading } = useNFTs(demoAddress);
+  const { inventory } = useItems(demoAddress);
+  const [tfBalance, setTfBalance] = useState(0);
+  const [bnbBalance, setBnbBalance] = useState(0);
+
+  // Fetch balances from backend
+  useEffect(() => {
+    const fetchBalances = async () => {
+      try {
+        const balances = await getUserBalances();
+        setTfBalance(balances.tfBalance || 0);
+        setBnbBalance(balances.maticBalance || 0);
+      } catch (err) {
+        console.error('Failed to fetch balances:', err);
+      }
+    };
+    if (wallet.isConnected) {
+      fetchBalances();
+    }
+  }, [wallet.isConnected]);
+
+  // Always keep a full array of 9 slots, each slot is either a tree (with slotIndex) or undefined
+  const SLOT_COUNT = 9;
+  const [landSlots, setLandSlots] = useState<(typeof allNFTs[0])[]>(Array(SLOT_COUNT).fill(undefined));
+
+  // Show loading state while NFTs are loading
+  if (isLoading) {
+    return <div className="text-center py-20 text-lg text-gray-600">Loading your dashboard...</div>;
+  }
+
+  const handleSlotClick = (slotIndex: number) => {
+    if (isLoading || !allNFTs || allNFTs.length === 0) {
+      toast.info('NFTs are loading, please wait...');
+      return;
+    }
+    toast.info(`Slot ${slotIndex + 1} clicked`);
+    if (!landSlots[slotIndex]) {
+      // Find a random NFT not already in land
+      const availableNFT = allNFTs.find(nft => !landSlots.some(t => t && t.id === nft.id));
+      if (availableNFT) {
+        // Clone and set slotIndex
+        const nftWithSlot = { ...availableNFT, slotIndex };
+        const newSlots = [...landSlots];
+        newSlots[slotIndex] = nftWithSlot;
+        setLandSlots(newSlots);
+        toast.success('NFT added to land!');
+      } else {
+        toast.error('No available NFTs to add.');
+      }
+    }
+  };
+
+  const totalYield = landSlots.reduce((sum, nft) => sum + (nft?.dailyYield || 0), 0);
+  const plantedTrees = landSlots.filter(nft => nft).length;
+  const displayAddress = wallet.address || demoAddress;
+
+  if (isLoading || !allNFTs) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="text-lg text-gray-600 dark:text-gray-300">Loading NFTs...</span>
+      </div>
+    );
+  }
+
+    return (
+      <DashboardErrorBoundary>
+      <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+      >
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              TreeFi Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Manage your trees, claim rewards, and grow your collection
+            </p>
+          </div>
+          <SeasonBadge />
+        </div>
+      </motion.div>
+
+      {/* Player Profile */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="mb-6"
+      >
+        <Card className="bg-gradient-to-r from-[#0F5F3A] to-[#166C47] dark:from-[#166C47] dark:to-[#22C55E] text-white border-0">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+                <Wallet className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">
+                  {wallet.isConnected ? 'Connected Wallet' : 'Demo Wallet (Connect for real data)'}
+                </p>
+                <p className="text-lg font-mono font-bold">
+                  {displayAddress.slice(0, 6)}...{displayAddress.slice(-4)}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm opacity-90">Total Trees</p>
+                <p className="text-2xl font-bold">{landSlots.filter(t => t).length}</p>
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Planted</p>
+                <p className="text-2xl font-bold">{plantedTrees}/9</p>
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Daily Yield</p>
+                <p className="text-2xl font-bold">{totalYield} TF</p>
+              </div>
+              <div>
+                <p className="text-sm opacity-90">TF Balance</p>
+                <p className="text-2xl font-bold">{tfBalance.toFixed(2)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Land Overview */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-2"
+        >
+          <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <TreePine className="w-5 h-5 text-[#0F5F3A] dark:text-[#22C55E]" />
+                Land Overview (9 Slots)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LandSlots trees={landSlots} onSlotClick={handleSlotClick} />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Right Sidebar */}
+        <div className="space-y-6">
+          {/* Token Balances */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                  <Coins className="w-5 h-5 text-[#E2B13C] dark:text-[#FCD34D]" />
+                  Token Balances
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[#0F5F3A] dark:bg-[#22C55E] flex items-center justify-center text-white text-xs font-bold">
+                      TF
+                    </div>
+                    <span className="font-medium text-gray-900 dark:text-white">TreeFi Token</span>
+                  </div>
+                  <span className="font-bold text-[#0F5F3A] dark:text-[#22C55E]">
+                    {tfBalance.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[#E2B13C] dark:bg-[#FCD34D] flex items-center justify-center text-white text-xs font-bold">
+                      BNB
+                    </div>
+                    <span className="font-medium text-gray-900 dark:text-white">BNB</span>
+                  </div>
+                  <span className="font-bold text-[#E2B13C] dark:text-[#FCD34D]">
+                    {bnbBalance.toFixed(4)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Items Inventory */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                  <ShoppingBag className="w-5 h-5 text-[#3B82F6] dark:text-[#60A5FA]" />
+                  Items Inventory
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="flex items-center gap-2">
+                    <Droplets className="w-5 h-5 text-[#3B82F6] dark:text-[#60A5FA]" />
+                    <span className="text-sm text-gray-900 dark:text-white">Water</span>
+                  </div>
+                  <span className="font-bold text-gray-900 dark:text-white">{inventory.water}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="flex items-center gap-2">
+                    <Sprout className="w-5 h-5 text-[#22C55E] dark:text-[#4ADE80]" />
+                    <span className="text-sm text-gray-900 dark:text-white">Fertilizer</span>
+                  </div>
+                  <span className="font-bold text-gray-900 dark:text-white">{inventory.fertilizer}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="flex items-center gap-2">
+                    <Bug className="w-5 h-5 text-[#EF4444] dark:text-[#F87171]" />
+                    <span className="text-sm text-gray-900 dark:text-white">Anti-Bug</span>
+                  </div>
+                  <span className="font-bold text-gray-900 dark:text-white">{inventory.antiBug}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-white">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Button
+                className="h-auto py-4 flex-col gap-2 bg-[#0F5F3A] hover:bg-[#166C47] dark:bg-[#22C55E] dark:hover:bg-[#16A34A] text-white"
+                onClick={() => window.location.href = '/shop'}
+              >
+                <ShoppingBag className="w-6 h-6" />
+                <span>Buy Bundles</span>
+              </Button>
+              <Button
+                className="h-auto py-4 flex-col gap-2 bg-[#C43B3B] hover:bg-[#A83232] dark:bg-[#EF4444] dark:hover:bg-[#DC2626] text-white"
+                onClick={() => window.location.href = '/claim'}
+              >
+                <Coins className="w-6 h-6" />
+                <span>Claim TF</span>
+              </Button>
+              <Button
+                className="h-auto py-4 flex-col gap-2 bg-[#A855F7] hover:bg-[#9333EA] dark:bg-[#C084FC] dark:hover:bg-[#A855F7] text-white"
+                onClick={() => window.location.href = '/fusion'}
+              >
+                <Zap className="w-6 h-6" />
+                <span>Fusion</span>
+              </Button>
+              <Button
+                className="h-auto py-4 flex-col gap-2 bg-[#E2B13C] hover:bg-[#D4A02C] dark:bg-[#FCD34D] dark:hover:bg-[#FDE047] text-gray-900"
+                onClick={() => toast.info('Gift code redemption coming soon!')}
+              >
+                <Gift className="w-6 h-6" />
+                <span>Redeem Code</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+    </DashboardErrorBoundary>
+  );
+}

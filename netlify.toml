@@ -1,0 +1,27 @@
+[build]
+  command = "pnpm build"
+  functions = "netlify/functions"
+  publish = "dist"
+
+[dev]
+  command = "pnpm dev"
+
+[[redirects]]
+  # Specific mapping for auth endpoints so frontend path /api/auth/nonce
+  # maps to function file `netlify/functions/auth-nonce.(ts|js)`
+  from = "/api/auth/*"
+  to = "/.netlify/functions/auth-:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  # Generic mapping for other functions
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+[[redirects]]
+  # SPA catch-all: redirect all routes to index.html for React Router to handle
+  from = "/*"
+  to = "/index.html"
+  status = 200

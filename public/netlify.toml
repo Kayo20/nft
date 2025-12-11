@@ -1,0 +1,19 @@
+# This is copied from root netlify.toml - Netlify will use the one at project root
+# But keeping this for reference during development
+
+[[redirects]]
+  from = "/api/auth/*"
+  to = "/.netlify/functions/auth-:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
