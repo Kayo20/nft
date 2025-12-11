@@ -83,7 +83,10 @@ export const handler: Handler = async (event) => {
       console.warn('Failed to persist nonce to Supabase, using memory store:', e);
     }
 
-    return { statusCode: 200, headers, body: JSON.stringify({ nonce }) };
+    // Also set a short-lived HttpOnly cookie with the nonce so verify can read it
+    const cookie = `treefi_nonce=${nonce}; Path=/; Max-Age=${Math.floor((expiresAt - now) / 1000)}; SameSite=Strict; HttpOnly; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}`;
+
+    return { statusCode: 200, headers: { ...headers, 'Set-Cookie': cookie }, body: JSON.stringify({ nonce }) };
   } catch (err: any) {
     console.error("auth-nonce error", err);
     return { statusCode: 500, headers, body: JSON.stringify({ error: "internal server error" }) };

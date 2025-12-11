@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UserInventory } from '@/types';
-import { purchaseItem } from '@/lib/api';
+import { purchaseItem as purchaseItemApi } from '@/lib/api';
+import { getUserInventory } from '@/lib/apiUser';
 
 export const useItems = (address: string | null) => {
   const [inventory, setInventory] = useState<UserInventory>({
@@ -18,11 +19,16 @@ export const useItems = (address: string | null) => {
     setError(null);
 
     try {
-      const data = await mockApi.getUserItems(address);
-      setInventory(data);
+      const data = await getUserInventory();
+      setInventory({
+        water: data.water || 0,
+        fertilizer: data.fertilizer || 0,
+        antiBug: data.antiBug || 0,
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch inventory';
       setError(errorMessage);
+      console.error('fetchInventory error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -30,13 +36,9 @@ export const useItems = (address: string | null) => {
 
   const purchaseItem = async (itemId: string, quantity: number) => {
     try {
-      // using demo address is handled by caller (useItems receives address prop)
-      await purchaseItem(itemId, quantity);
-      // Update inventory
-      setInventory(prev => ({
-        ...prev,
-        [itemId]: prev[itemId as keyof UserInventory] + quantity,
-      }));
+      await purchaseItemApi(itemId, quantity);
+      // Refetch inventory after purchase
+      await fetchInventory();
       return true;
     } catch (err) {
       console.error('Purchase failed:', err);

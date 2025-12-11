@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
 import { useNFTs } from '@/hooks/useNFTs';
 import { useItems } from '@/hooks/useItems';
+import { useUserLands, useLandDetails } from '@/hooks/useUserLands';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LandSlots } from '@/components/dashboard/LandSlots';
@@ -18,22 +19,19 @@ import {
 import { ITEMS } from '@/lib/constants';
 import { toast } from 'sonner';
 
-// For now, only 1 land for season 0. In future, lands can be bought and added to this array.
-const INITIAL_LANDS = [
-  { id: 1, name: 'Land 1', slots: 9 },
-  // Future: { id: 2, name: 'Land 2', slots: 9 }, ...
-];
-
 export default function Inventory() {
   const { wallet } = useWallet();
   const demoAddress = wallet.address || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
   const { nfts, isLoading } = useNFTs(demoAddress);
-  // Simulate lands (season 0: 1 land, future: more)
-  const [lands] = useState(INITIAL_LANDS);
-  const [currentLand, setCurrentLand] = useState(0); // page index
   const { inventory } = useItems(demoAddress);
-  const [tfBalance] = useState(0);
-  const [maticBalance] = useState(0);
+  
+  // Fetch lands from backend
+  const { lands = [], isLoading: landsLoading } = useUserLands(demoAddress);
+  const [currentLand, setCurrentLand] = useState(0);
+  
+  // Fetch details for current land
+  const currentLandId = lands.length > 0 ? lands[currentLand]?.id : null;
+  const { landData } = useLandDetails(currentLandId, landsLoading || lands.length === 0);
 
   const handleSlotClick = (slotIndex: number) => {
     toast.info(`Slot ${slotIndex + 1} clicked`);
@@ -45,23 +43,25 @@ export default function Inventory() {
     });
   };
 
+  // Get current land data - use real data from backend if available
+  const currentLandData = landData || (lands.length > 0 ? lands[currentLand] : null);
+  const landSlotCount = currentLandData?.slots || 9; // Default to 9 if not available
+  
+  // Initialize landSlots from backend slot data, or empty if no data
+  const [landSlots] = useState(() => {
+    if (currentLandData?.slot_data && Array.isArray(currentLandData.slot_data)) {
+      return currentLandData.slot_data;
+    }
+    return Array(landSlotCount).fill(null);
+  });
 
-  // Local state for land slots: initially empty, user can add NFT to slot
-  const landSlotCount = lands[currentLand].slots;
-  const [landSlots, setLandSlots] = useState(Array(landSlotCount).fill(null));
-
-  // Handler to add a tree to a slot (simulate with mock NFT)
   const handleAddTree = (slotIndex: number) => {
-    // Find a random NFT not already in a slot
-    const availableNFT = nfts.find(nft => !landSlots.some(t => t && t.id === nft.id));
-    if (!availableNFT) return;
-    const newSlots = [...landSlots];
-    newSlots[slotIndex] = availableNFT;
-    setLandSlots(newSlots);
+    toast.info(`Adding tree to slot ${slotIndex + 1}...`);
+    // In a real implementation, this would call the backend to update the slot
   };
 
   const totalYield = nfts.reduce((sum, nft) => sum + nft.dailyYield, 0);
-  const plantedTrees = nfts.filter(nft => nft.slotIndex !== undefined).length;
+  const plantedTrees = landSlots.filter(slot => slot !== null).length;
   const totalPower = nfts.reduce((sum, nft) => sum + nft.power, 0);
   const displayAddress = wallet.address || demoAddress;
 
@@ -144,7 +144,7 @@ export default function Inventory() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
                   <TreePine className="w-5 h-5 text-[#0F5F3A] dark:text-[#22C55E]" />
-                  {lands[currentLand].name} ({lands[currentLand].slots} Slots)
+                  {currentLandData?.name || `Land ${currentLand + 1}`} ({landSlotCount} Slots)
                 </CardTitle>
                 <Button
                   onClick={handleAddItems}
@@ -169,6 +169,9 @@ export default function Inventory() {
                     {idx + 1}
                   </button>
                 ))}
+                {lands.length === 0 && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Loading lands...</p>
+                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -178,7 +181,7 @@ export default function Inventory() {
                     trees={landSlots}
                     onSlotClick={handleSlotClick}
                     onAddTree={handleAddTree}
-                    slots={lands[currentLand].slots}
+                    slots={landSlotCount}
                     className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3"
                   />
                 </div>

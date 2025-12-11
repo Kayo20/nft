@@ -127,7 +127,7 @@ export default function Landing() {
             className="flex justify-center pt-4"
           >
             <a
-              href="https://www.pinksale.finance/launchpad/polygon/0x8A11Efc43FaaC3FAF0230A9D4dF3a870C447804b"
+              href="https://www.pinksale.finance/launchpad/polygon/0x6CB4391Bcd92e0f81a2b02fa735Ec63a20D6Dab0"
               target="_blank"
               rel="noopener noreferrer"
             >

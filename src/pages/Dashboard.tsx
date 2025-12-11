@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import React from 'react';
 import { useWallet } from '@/hooks/useWallet';
 import { useNFTs } from '@/hooks/useNFTs';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LandSlots } from '@/components/dashboard/LandSlots';
 import { SeasonBadge } from '@/components/dashboard/SeasonBadge';
+import { getUserBalances } from '@/lib/apiUser';
 import { motion } from 'framer-motion';
 import {
   TreePine,
@@ -45,12 +46,27 @@ class DashboardErrorBoundary extends React.Component<{ children: React.ReactNode
 
 export default function Dashboard() {
   const { wallet } = useWallet();
-  // Use mock address for demo purposes
   const demoAddress = wallet.address || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
   const { nfts: allNFTs, isLoading } = useNFTs(demoAddress);
   const { inventory } = useItems(demoAddress);
-  const [tfBalance] = useState(1234.56);
-  const [bnbBalance] = useState(0.5432);
+  const [tfBalance, setTfBalance] = useState(0);
+  const [bnbBalance, setBnbBalance] = useState(0);
+
+  // Fetch balances from backend
+  useEffect(() => {
+    const fetchBalances = async () => {
+      try {
+        const balances = await getUserBalances();
+        setTfBalance(balances.tfBalance || 0);
+        setBnbBalance(balances.maticBalance || 0);
+      } catch (err) {
+        console.error('Failed to fetch balances:', err);
+      }
+    };
+    if (wallet.isConnected) {
+      fetchBalances();
+    }
+  }, [wallet.isConnected]);
 
   // Always keep a full array of 9 slots, each slot is either a tree (with slotIndex) or undefined
   const SLOT_COUNT = 9;

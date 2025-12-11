@@ -5,19 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { mockApi } from '@/lib/mockApi';
 import { Coins, Info } from 'lucide-react';
 import { toast } from 'sonner';
+import { getClaimableRewards, getUserBalances } from '@/lib/apiUser';
 
 export default function Claim() {
   const { wallet } = useWallet();
   const [tfBalance, setTfBalance] = useState(0);
-  const [claimableAmount, setClaimableAmount] = useState(156.78);
-  const [feePercentage, setFeePercentage] = useState(30);
+  const [claimableAmount, setClaimableAmount] = useState(0);
+  const [feePercentage, setFeePercentage] = useState(0);
   const [netAmount, setNetAmount] = useState(0);
-  const [daysSinceLastClaim, setDaysSinceLastClaim] = useState(5);
+  const [daysSinceLastClaim, setDaysSinceLastClaim] = useState(0);
   const [isClaiming, setIsClaiming] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const net = claimableAmount * (1 - feePercentage / 100);

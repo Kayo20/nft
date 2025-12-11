@@ -1,0 +1,124 @@
+import { Handler } from "@netlify/functions";
+import { createClient } from "@supabase/supabase-js";
+import { corsHeaders, securityHeaders } from "./_utils/auth";
+import { verifySession } from "./_utils/auth";
+
+interface UpdateSlotRequest {
+  slotIndex: number;
+  nftId: number | null;
+}
+
+let supabase: any;
+try {
+  supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+} catch (e) {
+  console.warn('Supabase client initialization failed:', e);
+}
+
+export const handler: Handler = async (event) => {
+  const headers = { ...corsHeaders(), ...securityHeaders() };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers, body: '' };
+  }
+
+  try {
+    // Verify session
+    const session = verifySession(event.headers && (event.headers.cookie || event.headers.Cookie || ''));
+    if (!session) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: "unauthorized" }) };
+    }
+
+    const address = session.address;
+
+    // Parse request body
+    if (!event.body) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "request body required" }) };
+    }
+
+    let body: UpdateSlotRequest;
+    try {
+      body = JSON.parse(event.body);
+    } catch (e) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "invalid JSON" }) };
+    }
+
+    const { slotIndex, nftId } = body;
+
+    if (typeof slotIndex !== 'number' || slotIndex < 0) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "invalid slotIndex" }) };
+    }
+
+    // Extract landId from path
+    const pathSegments = event.path.split('/');
+    const landId = pathSegments[pathSegments.length - 2];
+
+    if (!landId || landId === 'land') {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "missing landId" }) };
+    }
+
+    // Verify land ownership
+    const { data: land } = await supabase
+      .from("lands")
+      .select("*")
+      .eq("id", landId)
+      .eq("owner", address)
+      .single()
+      .catch(() => ({ data: null }));
+
+    if (!land) {
+      return { statusCode: 404, headers, body: JSON.stringify({ error: "land not found" }) };
+    }
+
+    // If nftId is not null, verify NFT ownership
+    if (nftId !== null) {
+      const { data: nft } = await supabase
+        .from("nfts")
+        .select("*")
+        .eq("id", nftId)
+        .eq("owner", address)
+        .single()
+        .catch(() => ({ data: null }));
+
+      if (!nft) {
+        return { statusCode: 404, headers, body: JSON.stringify({ error: "nft not found" }) };
+      }
+    }
+
+    // Update or delete slot
+    if (nftId === null) {
+      // Remove from slot
+      await supabase
+        .from("land_slots")
+        .delete()
+        .eq("landId", landId)
+        .eq("slotIndex", slotIndex)
+        .catch(() => {});
+    } else {
+      // Upsert slot
+      await supabase
+        .from("land_slots")
+        .upsert({
+          landId,
+          slotIndex,
+          nftId,
+        }, { onConflict: ["landId", "slotIndex"] })
+        .catch(() => {});
+    }
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        ok: true,
+        slot: {
+          index: slotIndex,
+          nftId,
+        },
+      }),
+    };
+  } catch (err: any) {
+    console.error("land-update-slots error", err);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: "internal server error" }) };
+  }
+};

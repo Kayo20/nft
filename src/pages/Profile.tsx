@@ -1,5 +1,6 @@
 import { useWallet } from '@/hooks/useWallet';
 import { useNFTs } from '@/hooks/useNFTs';
+import { useUserBalances } from '@/hooks/useUserBalances';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ export default function Profile() {
   const { wallet, disconnect } = useWallet();
   const demoAddress = wallet.address || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
   const { nfts } = useNFTs(demoAddress);
+  const { tfBalance } = useUserBalances(wallet.address);
 
   const copyAddress = () => {
     navigator.clipboard.writeText(demoAddress);
@@ -180,7 +182,7 @@ export default function Profile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-bold text-[#0F5F3A] dark:text-[#22C55E] mb-2">0.00</p>
+                <p className="text-4xl font-bold text-[#0F5F3A] dark:text-[#22C55E] mb-2">{tfBalance.toFixed(2)}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">TreeFi Tokens</p>
               </CardContent>
             </Card>

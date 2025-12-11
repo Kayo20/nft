@@ -207,3 +207,8 @@ When wallet connection works:
 - `CORS error` = Netlify CORS middleware issue (shouldn't happen with current setup)
 - `signature verification failed` = Invalid signature or corrupted message
 - `nonce expired` = Nonce too old (regenerate with new request)
+
+
+
+
+

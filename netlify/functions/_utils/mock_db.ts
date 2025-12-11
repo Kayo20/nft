@@ -33,6 +33,34 @@ const transactions: any[] = [];
 let nextId = 1;
 let nextFarmingId = 1;
 
+// Supabase image URL generation
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
+const NFT_IMAGES_BUCKET = process.env.VITE_NFT_IMAGES_BUCKET || 'nft-images';
+
+// Map of rarity to number of available images
+const rarityImageCounts: Record<string, number> = {
+  'uncommon': 40,
+  'rare': 3,
+  'epic': 3,
+  'legendary': 10,
+};
+
+/**
+ * Generate a random Supabase image URL for an NFT based on rarity
+ */
+function getRandomImageUrl(rarity: string): string {
+  if (!SUPABASE_URL || !NFT_IMAGES_BUCKET) {
+    // Fallback if Supabase not configured
+    return `https://via.placeholder.com/300x300?text=${rarity}`;
+  }
+
+  const rarityLower = rarity.toLowerCase();
+  const maxImages = rarityImageCounts[rarityLower] || 1;
+  const randomNum = Math.floor(Math.random() * maxImages) + 1;
+
+  return `${SUPABASE_URL}/storage/v1/object/public/${NFT_IMAGES_BUCKET}/${rarityLower}/${randomNum}.png`;
+}
+
 export function resetMockData() {
   nfts.clear();
   items.clear();
@@ -45,6 +73,38 @@ export function resetMockData() {
   items.set('water', { id: 'water', name: 'Pure Water Bundle (10 units)', price: 10 }); // 10 TF per bundle
   items.set('fertilizer', { id: 'fertilizer', name: 'Fertilizer Bundle (10 units)', price: 10 });
   items.set('antiBug', { id: 'antiBug', name: 'Anti Bug Bundle (10 units)', price: 10 });
+
+  // Seed demo NFTs with Supabase image URLs
+  const demoAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
+  
+  const rarities = [
+    { name: 'Uncommon', power: 10, dailyYield: 5 },
+    { name: 'Rare', power: 15, dailyYield: 10 },
+    { name: 'Epic', power: 25, dailyYield: 18 },
+    { name: 'Legendary', power: 40, dailyYield: 30 },
+  ];
+
+  // Create 2 demo NFTs of each rarity
+  for (const rarity of rarities) {
+    for (let i = 0; i < 2; i++) {
+      insertNft({
+        owner_address: demoAddress,
+        rarity: rarity.name,
+        power: rarity.power + Math.floor(Math.random() * 5), // Add some variance
+        daily_yield: rarity.dailyYield + Math.floor(Math.random() * 3),
+        health: 100,
+        image_url: getRandomImageUrl(rarity.name),
+        status: 'active',
+      });
+    }
+  }
+
+  // Seed demo inventory
+  inventories.set(demoAddress.toLowerCase(), new Map([
+    ['water', 15],
+    ['fertilizer', 10],
+    ['antiBug', 8],
+  ]));
 }
 
 export function getNftsByOwner(owner: string) {
