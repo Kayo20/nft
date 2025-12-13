@@ -550,7 +550,7 @@ export default function Landing() {
               <CardContent className="p-8 flex flex-col items-center justify-center h-full gap-4">
                 <div className="w-40 h-40 bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-950 dark:to-yellow-900 rounded-xl flex items-center justify-center">
                   <img
-                    src="/fourmeme.svg"
+                    src="/fourmeme.png"
                     alt="fourMeme Logo"
                     className="w-32 h-32 object-contain"
                     onError={(e) => {
