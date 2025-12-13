@@ -54,7 +54,7 @@ Season 0 is 10 days (Dec 15 - Dec 25, 2024)
 - **Guaranteed Output**: Always Uncommon NFT (100% drop rate)
 
 ### 6. Fusion Rules
-**Cost** (deducted in Polygon via fusion contracts):
+**Cost** (deducted in BNB via fusion contracts):
 - 3x Uncommon → Rare: 50 TF
 - 3x Rare → Epic: 150 TF
 - 3x Epic → Legend: 500 TF

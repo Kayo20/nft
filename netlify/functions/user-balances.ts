@@ -58,8 +58,8 @@ export const handler: Handler = async (event) => {
         maticBalance = parseFloat(ethers.formatEther(balance));
       }
     } catch (e) {
-      console.warn('Failed to fetch MATIC balance from RPC:', e);
-      // Fallback: return 0 for MATIC balance if RPC fails
+      console.warn('Failed to fetch BNB balance from RPC:', e);
+      // Fallback: return 0 for BNB balance if RPC fails
     }
 
     return {
@@ -68,7 +68,7 @@ export const handler: Handler = async (event) => {
       body: JSON.stringify({
         address,
         tfBalance,
-        maticBalance,
+        bnbBalance,
         ethBalance,
       }),
     };

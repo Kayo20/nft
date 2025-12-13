@@ -13,7 +13,7 @@ export const Footer = () => {
               <img src="/logo.png" alt="Logo" className="w-12 h-12" />
             </div>
             <p className="text-sm text-[#6B7280]">
-              Web3 farming game on Polygon. Grow your trees, earn rewards!
+              Web3 farming game on BNB Smart Chain. Grow your trees, earn rewards!
             </p>
           </div>
 
@@ -57,7 +57,7 @@ export const Footer = () => {
         </div>
 
         <div className="mt-8 pt-6 border-t border-[#166C47]/20 text-center text-sm text-[#6B7280]">
-          <p>&copy; {new Date().getFullYear()} TreeFi. All rights reserved. Built on Polygon.</p>
+          <p>&copy; {new Date().getFullYear()} TreeFi. All rights reserved. Built on BNB Smart Chain.</p>
         </div>
       </div>
     </footer>

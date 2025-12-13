@@ -31,7 +31,7 @@
 
 5. **Verify Connected**
    - Navbar shows: `0x1234...5678` (shortened address)
-   - Below: `0 MATIC` (balance)
+   - Below: `0 BNB` (balance)
    - Button changed to "Disconnect"
 
 ✅ **Success!** Wallet connected via SIWE
@@ -172,8 +172,8 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-key-here
 SUPABASE_ANON_KEY=your-key-here
 
-# Optional (for Polygon operations)
-POLYGON_RPC_URL=https://polygon-rpc.com
+# Optional (for BNB Chain operations)
+BNB_RPC_URL=https://bsc-dataseed.bnbchain.org
 ```
 
 Generate JWT_SECRET in PowerShell:

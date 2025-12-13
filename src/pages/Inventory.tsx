@@ -222,13 +222,13 @@ export default function Inventory() {
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[#8247E5] dark:bg-[#A855F7] flex items-center justify-center text-white text-xs font-bold">
-                      M
+                    <div className="w-8 h-8 rounded-full bg-[#F3BA2F] dark:bg-[#FBBF24] flex items-center justify-center text-white text-xs font-bold">
+                      B
                     </div>
-                    <span className="font-medium text-gray-900 dark:text-white">MATIC</span>
+                    <span className="font-medium text-gray-900 dark:text-white">BNB</span>
                   </div>
-                  <span className="font-bold text-[#8247E5] dark:text-[#A855F7]">
-                    {maticBalance.toFixed(4)}
+                  <span className="font-bold text-[#F3BA2F] dark:text-[#FBBF24]">
+                    {bnbBalance.toFixed(4)}
                   </span>
                 </div>
               </CardContent>

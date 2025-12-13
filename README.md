@@ -37,7 +37,7 @@ cp .env.example .env.local
 - `SUPABASE_ANON_KEY` - Client-side key
 - `APP_DOMAIN` - http://localhost:5173 (or your deployed domain)
 - `JWT_SECRET` - Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
-- `POLYGON_RPC_URL` - Polygon RPC (get from Alchemy, Infura, or use https://polygon-rpc.com/)
+- `BNB_RPC_URL` - BNB Chain RPC (get from Alchemy, Infura, or use https://bsc-dataseed.bnbchain.org/)
 - `ALCHEMY_KEY` - Optional: Alchemy API key for better RPC reliability
 - `NODE_ENV` - `development` or `production`
 
@@ -94,7 +94,7 @@ Expected: Should see a `MetaMaskInpageProvider` object (not undefined)
 
 #### 5. Confirm Connection
 - After signing, wallet address displays in navbar (shortened: `0x1234...5678`)
-- Balance shown below address (e.g., `0 MATIC`)
+- Balance shown below address (e.g., `0 BNB`)
 - "Disconnect" button replaces "Connect Wallet"
 
 ### Troubleshooting Wallet Connection
@@ -222,19 +222,19 @@ pnpm run build
 .......................``` backend promt``` ..........
 
 
-One-liner: below is a complete, copy-pasteable backend prompt you can give to a developer or AI to implement a secure backend for your TreeFi project using Supabase, Polygon, and MetaMask (SIWE). It includes architecture, APIs, DB schema, security controls, deployment, and acceptance criteria.
+One-liner: below is a complete, copy-pasteable backend prompt you can give to a developer or AI to implement a secure backend for your TreeFi project using Supabase, BNB Chain, and MetaMask (SIWE). It includes architecture, APIs, DB schema, security controls, deployment, and acceptance criteria.
 
 Backend Implementation Prompt
 
 Project: TreeFi — Web3 farming game backend
-Stack: Supabase (Postgres + Auth + Storage + Edge Functions), Node/TypeScript (optional, for any custom business logic), Ethers.js (Polygon RPC interaction), Sign-In With Ethereum (SIWE) via MetaMask
-Goal: Build a secure, production-ready backend for user auth, NFT management, item/shop purchases, fusion mechanics, claims, and integration with Polygon for on-chain receipts. Use Supabase as the primary backend and storage. Provide secure APIs, RLS policies, and logging/monitoring.
+Stack: Supabase (Postgres + Auth + Storage + Edge Functions), Node/TypeScript (optional, for any custom business logic), Ethers.js (BNB Chain RPC interaction), Sign-In With Ethereum (SIWE) via MetaMask
+Goal: Build a secure, production-ready backend for user auth, NFT management, item/shop purchases, fusion mechanics, claims, and integration with BNB Chain for on-chain receipts. Use Supabase as the primary backend and storage. Provide secure APIs, RLS policies, and logging/monitoring.
 High-level requirements
 
 Use SIWE (EIP-4361) to authenticate wallet owners via MetaMask; persist users in Supabase users table and create sessions.
 Store NFT metadata and app-only state in Supabase Postgres; images stored in Supabase Storage (private/public buckets).
 Handle fusion, chest opening, claims, purchases server-side (via Supabase Edge Functions or a small Node server) to avoid exposing business logic and secrets to the client.
-Integrate with Polygon RPC (Alchemy/Infura or public RPC) only for verification / signatures / optionally sending transactions (if required).
+Integrate with BNB Chain RPC (Alchemy/Infura or public RPC) only for verification / signatures / optionally sending transactions (if required).
 Secure everything: HTTPS-only, CORS, CSP, RLS, environment secrets stored in Supabase/Secrets Manager, nonces for SIWE, rate limiting, input validation, and auditing.
 Deliverables
 
@@ -283,7 +283,7 @@ Protected: { itemId, qty } → create transactions row, deduct balance in DB (or
 POST /api/claim
 
 Protected: { nftId } → compute claimable using CLAIM_FEE_SCHEDULE, apply fee, persist ledger (transactions), return amount.
-POST /api/webhooks/polygon (optional)
+POST /api/webhooks/bsc (optional)
 
 Verify incoming webhooks (via signature) from a relayer or service notifying of on-chain events (e.g., tx confirmations).
 Security requirements per endpoint:
@@ -311,7 +311,7 @@ inventories: allow read/write only when auth.uid() = user_id.
 Use Supabase Storage buckets:
 public-nft-images (public read) — for images used widely. OR
 private-nft-images (private) — use signed URLs to deliver images to clients for limited time.
-Use Supabase Edge Functions for server-side logic: keep secrets (Polygon RPC keys, private relayer keys) in Supabase secrets.
+Use Supabase Edge Functions for server-side logic: keep secrets (BNB Chain RPC keys, private relayer keys) in Supabase secrets.
 Use Supabase Auth for sessions (but SIWE needs custom verification): After successful SIWE, create (or upsert) Supabase user row and issue a Supabase session by calling Supabase Admin API or set session cookie from Edge Function.
 Recommended: Use import.meta.env / Supabase secrets for RPC keys, Alchemy/Infura keys.
 Authentication & Wallet flow (detailed SIWE)
@@ -331,9 +331,9 @@ Use strict domain and chainId checking.
 Nonce must be one-time and have an expiry.
 Ensure message.issuedAt and message.expirationTime checks.
 Do not rely only on client-side proof; always re-verify server-side.
-Polygon integration details
+BNB Chain integration details
 
-Use Ethers.js for RPC calls: const provider = new ethers.providers.JsonRpcProvider(process.env.POLYGON_RPC_URL)
+Use Ethers.js for RPC calls: const provider = new ethers.providers.JsonRpcProvider(process.env.BNB_RPC_URL)
 Use it for: verifying transaction receipts, reading contract state, or sending transactions (if backend is expected to sign — avoid holding keys in backend unless necessary).
 If on-chain payments are required: prefer user-signed transactions that are later verified by backend (by querying receipt and checking event logs), rather than holding a server private key to transfer funds.
 For any webhook based confirmations, always re-check RPC node yourself to avoid trusting external relayers.
@@ -343,7 +343,7 @@ HTTPS everywhere (managed by hosting provider).
 CSP and secure headers (use helmet if using Node or set headers in Edge Functions).
 CORS: restrict origins to your frontend domain(s) only.
 Rate limiting: add per-IP and per-account rate-limits for heavy endpoints (/api/fuse, /api/chest/open, /api/shop/purchase).
-Secrets: store SUPABASE_SERVICE_KEY, POLYGON_RPC_URL, ALCHEMY_KEY in Supabase secrets or a managed secrets store. Rotate keys periodically.
+Secrets: store SUPABASE_SERVICE_KEY, BNB_RPC_URL, ALCHEMY_KEY in Supabase secrets or a managed secrets store. Rotate keys periodically.
 Database: enable automatic backups & point-in-time recovery if available.
 RLS: enforce row-level settings on Postgres; use server role for admin tasks only.
 Parameterized DB queries and strong input validation on all APIs.
@@ -356,14 +356,14 @@ Supabase: host DB and Storage on Supabase; deploy Edge Functions within Supabase
 CI/CD: use GitHub Actions to run lint, tests, and deploy Edge Functions & schema migrations.
 Env vars required:
 SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
-POLYGON_RPC_URL / ALCHEMY_KEY
+BNB_RPC_URL / ALCHEMY_KEY
 APP_DOMAIN (for SIWE domain verification)
 JWT_SECRET (if issuing your own JWTs)
 Migrations: store SQL schema in supabase/migrations and apply via GitHub Actions.
 Testing & QA
 
 Unit tests: cover all business logic (fusion rules, chest RNG distribution, claim computation).
-Integration tests: simulate SIWE flow, create user, create NFTs, perform fusion, purchase item flows using test wallets (Ganache/Polygon testnet).
+Integration tests: simulate SIWE flow, create user, create NFTs, perform fusion, purchase item flows using test wallets (Ganache/BNB testnet).
 Security tests: run basic fuzzing, check RLS policies using non-authenticated requests.
 Run load tests for heavy endpoints (simulate many concurrent chest opening/fusion actions).
 Acceptance Criteria
@@ -402,7 +402,7 @@ npx netlify dev
   - `SUPABASE_URL`
   - `SUPABASE_SERVICE_ROLE_KEY` (server-only)
   - `SUPABASE_ANON_KEY`
-  - `POLYGON_RPC_URL`
+  - `BNB_RPC_URL`
   - `ALCHEMY_KEY` (optional)
   - `APP_DOMAIN`
   - `JWT_SECRET` (if issuing custom tokens)
@@ -429,19 +429,19 @@ Verify: use new SiweMessage(message).verify({ signature, domain, nonce })
 
 Amended Backend Implementation Prompt (Netlify Functions)
 
-One-liner: below is a complete, copy-pasteable backend prompt you can give to a developer or AI to implement a secure backend for your TreeFi project using Netlify Serverless Functions (Node/TypeScript), Supabase (Postgres + Storage), Polygon (Ethers.js), and MetaMask (SIWE). It includes architecture, APIs, DB schema, security controls, deployment, and acceptance criteria.
+One-liner: below is a complete, copy-pasteable backend prompt you can give to a developer or AI to implement a secure backend for your TreeFi project using Netlify Serverless Functions (Node/TypeScript), Supabase (Postgres + Storage), BNB Chain (Ethers.js), and MetaMask (SIWE). It includes architecture, APIs, DB schema, security controls, deployment, and acceptance criteria.
 
 Project: TreeFi — Web3 farming game backend
-Stack: Netlify Functions (Node/TypeScript) for server-side logic, Supabase (Postgres + Auth + Storage) as the DB and storage provider, Ethers.js (Polygon RPC interaction), Sign-In With Ethereum (SIWE / EIP-4361) via MetaMask
+Stack: Netlify Functions (Node/TypeScript) for server-side logic, Supabase (Postgres + Auth + Storage) as the DB and storage provider, Ethers.js (BNB Chain RPC interaction), Sign-In With Ethereum (SIWE / EIP-4361) via MetaMask
 
-Goal: Build a secure, production-ready backend for user auth, NFT management, shop purchases, fusion mechanics, claims, and Polygon verification. Use Supabase for authoritative storage and metadata; deploy server-side business logic as Netlify Functions so secrets and logic stay on the server.
+Goal: Build a secure, production-ready backend for user auth, NFT management, shop purchases, fusion mechanics, claims, and BNB Chain verification. Use Supabase for authoritative storage and metadata; deploy server-side business logic as Netlify Functions so secrets and logic stay on the server.
 
 High-level requirements
 
 Use SIWE (EIP-4361) to authenticate wallet owners via MetaMask; persist users in the Supabase users table and issue a session (cookie or JWT).
 Store NFT metadata and app-only state in Supabase Postgres; images in Supabase Storage (public or private buckets).
 Implement fusion, chest opening, claims, and purchases server-side as Netlify Functions to avoid exposing business logic and secrets on the client.
-Use Ethers.js + Polygon RPC (Alchemy/Infura or other) only for verification of receipts or reading on-chain state; do not store persistent private keys unless required.
+Use Ethers.js + BNB Chain RPC (Alchemy/Infura or other) only for verification of receipts or reading on-chain state; do not store persistent private keys unless required.
 Secure endpoints (HTTPS enforced by Netlify), enforce CORS, CSP, RLS on Postgres, input validation, rate limiting, and logging/auditing.
 Deliverables
 
@@ -489,15 +489,15 @@ Protected: { itemId, qty } → create transaction row, deduct balance (DB) or ve
 POST /api/claim
 
 Protected: { nftId } → compute claimable per schedule, apply fee, persist transaction, return result.
-POST /api/webhooks/polygon (optional)
+POST /api/webhooks/bsc (optional)
 
-Verify incoming webhooks (signature) from relayers; always re-verify receipts using your Polygon RPC provider.
+Verify incoming webhooks (signature) from relayers; always re-verify receipts using your BNB Chain RPC provider.
 Netlify-specific architecture & deployment notes
 
 Functions location: place server code in netlify/functions or configure a different folder in netlify.toml.
 Local dev: use the Netlify CLI netlify dev to run functions locally and test endpoints.
 Routing: create netlify.toml rewrites so /api/* maps to /.netlify/functions/* (example below).
-Secrets & env vars: set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, POLYGON_RPC_URL, ALCHEMY_KEY, APP_DOMAIN, JWT_SECRET, etc., in the Netlify Dashboard under Site Settings → Build & deploy → Environment.
+Secrets & env vars: set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, BNB_RPC_URL, ALCHEMY_KEY, APP_DOMAIN, JWT_SECRET, etc., in the Netlify Dashboard under Site Settings → Build & deploy → Environment.
 Long tasks: Netlify Functions are limited in execution time. For longer jobs, use background functions, queue work (e.g., using Redis/Upstash), or offload to external worker services.
 Consider Netlify Edge Functions if you need tiny latency-critical logic at the CDN edge (Deno runtime), but use normal Netlify Functions (Node) for SIWE and DB transactions because they require Node libs and likely the Supabase client.
 Example netlify.toml
@@ -518,7 +518,7 @@ Provide in repo root:
 SUPABASE_URL
 SUPABASE_SERVICE_ROLE_KEY (server-only; never expose to client)
 SUPABASE_ANON_KEY
-POLYGON_RPC_URL
+BNB_RPC_URL
 ALCHEMY_KEY
 APP_DOMAIN
 JWT_SECRET (if you issue custom tokens)

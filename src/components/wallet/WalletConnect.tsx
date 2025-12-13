@@ -41,7 +41,7 @@ export const WalletConnect = () => {
           <span className="text-sm font-medium text-[#1F2937] dark:text-[#E5E7EB]">
             {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
           </span>
-          <span className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">{wallet.balance} MATIC</span>
+          <span className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">{wallet.balance} BNB</span>
         </div>
         <Button onClick={handleDisconnect} variant="outline" size="sm" className="gap-2" disabled={isDisconnecting}>
           <LogOut className="w-4 h-4" />

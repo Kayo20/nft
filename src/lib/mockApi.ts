@@ -160,7 +160,7 @@ export const mockApi = {
     await new Promise(resolve => setTimeout(resolve, 1000));
     return {
       address: '0x' + Math.random().toString(16).substr(2, 40),
-      chainId: 137, // Polygon
+      chainId: 56, // BNB Smart Chain
       balance: (Math.random() * 10).toFixed(4),
     };
   },

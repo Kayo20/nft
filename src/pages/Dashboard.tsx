@@ -58,7 +58,7 @@ export default function Dashboard() {
       try {
         const balances = await getUserBalances();
         setTfBalance(balances.tfBalance || 0);
-        setBnbBalance(balances.maticBalance || 0);
+        setBnbBalance(balances.bnbBalance || 0);
       } catch (err) {
         console.error('Failed to fetch balances:', err);
       }

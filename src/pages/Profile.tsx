@@ -97,11 +97,11 @@ export default function Profile() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-gray-600 dark:text-gray-400">Network</label>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">Polygon</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">BNB Smart Chain</p>
                   </div>
                   <div>
                     <label className="text-sm text-gray-600 dark:text-gray-400">Balance</label>
-                    <p className="text-lg font-semibold text-[#0F5F3A] dark:text-[#22C55E]">{wallet.balance} MATIC</p>
+                    <p className="text-lg font-semibold text-[#0F5F3A] dark:text-[#22C55E]">{wallet.balance} BNB</p>
                   </div>
                 </div>
 

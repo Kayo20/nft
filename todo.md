@@ -16,10 +16,10 @@
 - [x] Set dark mode as default theme
 - [x] Keep theme toggle functionality
 
-### 4. Network Change: BSC → Polygon
-- [x] Update all references from BNB Chain to Polygon
-- [x] Update chain ID from 56 to 137
-- [x] Update explorer links to Polygonscan
+### 4. Network Change: Polygon → BNB Chain
+- [x] Update all references from Polygon to BNB Chain
+- [x] Update chain ID from 137 to 56
+- [x] Update explorer links to BSCScan
 - [x] Update network display text
 
 ### 5. Home Page Updates

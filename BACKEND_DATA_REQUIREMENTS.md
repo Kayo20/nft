@@ -69,7 +69,7 @@ This document outlines all data that should be fetched from the backend for each
 GET /api/user/balances?address=0x...
 Response: {
   "tfBalance": number,
-  "maticBalance": number,
+  "bnbBalance": number,
   "ethBalance": number
 }
 ```
@@ -100,7 +100,7 @@ Response: {
 | **Land Details** | Land slots (9 per land) | Local state | Placeholder NFTs |
 | **Land Details** | Trees in slots | `useNFTs()` | Current slot assignments |
 | **Land Navigation** | Land pages | State variable | Current: static 1 land |
-| **Token Balances** | TF & MATIC | Same as Dashboard | ⚠️ **Needs backend** |
+| **Token Balances** | TF & BNB | Same as Dashboard | ⚠️ **Needs backend** |
 | **Items Inventory** | Item counts | `useItems()` | Water, Fertilizer, Anti-Bug |
 
 #### Backend Endpoints Needed
@@ -149,8 +149,8 @@ Response: { "ok": true, "slot": { "index": number, "nftId": number | null } }
 | Component | Data | Source | Notes |
 |-----------|------|--------|-------|
 | **Wallet Info** | Connected wallet | Session/useWallet | From MetaMask |
-| **Wallet Info** | Network (Polygon) | Static or useWallet | Hardcoded OK |
-| **Wallet Info** | MATIC balance | `wallet.balance` | Current: from ethers.getBalance() |
+| **Wallet Info** | Network (BNB Chain) | Static or useWallet | Hardcoded OK |
+| **Wallet Info** | BNB balance | `wallet.balance` | Current: from ethers.getBalance() |
 | **TF Token Balance** | TF token amount | Currently hardcoded (0.00) | ⚠️ **Needs backend** |
 | **Trees by Rarity** | Tree count by rarity | `useNFTs()` | Grouped from NFT list |
 | **Trees by Rarity** | Total power by rarity | Calculated from NFTs | Derived from `power` field |
@@ -450,7 +450,7 @@ For each NFT in inventory, backend should track:
 9. `POST /api/rewards/claim` - Claim accumulated TF
 
 ### ⚠️ Needed (8 endpoints)
-1. `GET /api/user/balances` - Token balances (TF, MATIC)
+1. `GET /api/user/balances` - Token balances (TF, BNB)
 2. `GET /api/user/profile` - User profile summary
 3. `GET /api/user/lands` - List of user lands
 4. `GET /api/land/:id` - Land details & slot state

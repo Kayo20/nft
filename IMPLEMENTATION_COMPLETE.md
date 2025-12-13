@@ -143,8 +143,8 @@ APP_DOMAIN=http://localhost:5173
 JWT_SECRET=your-secure-random-key-here
 NODE_ENV=development
 
-# Optional - Polygon
-POLYGON_RPC_URL=https://polygon-rpc.com
+# Optional - BNB Chain
+BNB_RPC_URL=https://bsc-dataseed.bnbchain.org
 ALCHEMY_KEY=your-optional-alchemy-key
 ```
 

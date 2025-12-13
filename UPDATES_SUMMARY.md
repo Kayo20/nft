@@ -36,19 +36,19 @@ All requested updates have been successfully implemented in the TreeFi project. 
 
 ---
 
-## 4. ✅ Network Change: BSC → Polygon
-- **Updated**: Chain ID from 56 (BSC) to 137 (Polygon)
-- **Updated**: Network name from "BNB Chain" to "Polygon"
-- **Updated**: Native currency from BNB to MATIC
-- **Updated**: RPC URLs to Polygon endpoints
-- **Updated**: Explorer links to Polygonscan
+## 4. ✅ Network Change: Polygon → BNB Chain
+- **Updated**: Chain ID from 137 (Polygon) to 56 (BNB Smart Chain)
+- **Updated**: Network name from "Polygon" to "BNB Smart Chain"
+- **Updated**: Native currency from MATIC to BNB
+- **Updated**: RPC URLs to BNB Chain endpoints
+- **Updated**: Explorer links to BSCScan
 - **Updated**: All references throughout the application
 
 ---
 
 ## 5. ✅ Home Page (Landing) Updates
 - **Updated**: Total supply display to "100M TF"
-- **Updated**: Network references to Polygon throughout
+- **Updated**: Network references to BNB Chain throughout
 - **Updated**: First 200 members reward: "2 free mints + OG role in Discord"
 - **Updated**: Season 0 duration to 10 days
 - **Updated**: Rarity system to show Power instead of exact TF rewards
@@ -68,7 +68,7 @@ All requested updates have been successfully implemented in the TreeFi project. 
 - **Renamed**: Dashboard.tsx to Inventory.tsx
 - **Updated**: Route from /dashboard to /dashboard (kept for compatibility)
 - **Updated**: Page title to "Inventory"
-- **Set**: All token balances to 0 initially (TF and MATIC)
+- **Set**: All token balances to 0 initially (TF and BNB)
 - **Removed**: Chest section from inventory
 - **Organized**: Display of Items, Trees, Land, and Balance
 - **Added**: Player profile card with stats
@@ -129,8 +129,8 @@ All requested updates have been successfully implemented in the TreeFi project. 
 
 ### Files Modified:
 1. `src/contexts/ThemeContext.tsx` - Dark mode default
-2. `src/lib/constants.ts` - Polygon network, fees, power levels
-3. `src/lib/web3.ts` - Polygon chain configuration
+2. `src/lib/constants.ts` - BNB Chain network, fees, power levels
+3. `src/lib/web3.ts` - BNB Chain configuration
 4. `src/lib/mockApi.ts` - Updated with power attribute
 5. `src/types/index.ts` - Added power to NFTTree interface
 6. `src/pages/Claim.tsx` - Simplified claim interface
@@ -141,7 +141,7 @@ All requested updates have been successfully implemented in the TreeFi project. 
 11. `src/components/nft/TreeCard.tsx` - Power display
 12. `src/components/dashboard/LandSlots.tsx` - Festive design
 13. `src/components/claim/ClaimProgress.tsx` - 10-day schedule
-14. `src/hooks/useWallet.ts` - Polygon network support
+14. `src/hooks/useWallet.ts` - BNB Chain network support
 15. `src/App.tsx` - Updated routing
 
 ### Build Status:
@@ -155,7 +155,7 @@ All requested updates have been successfully implemented in the TreeFi project. 
 ## Testing Recommendations
 
 1. **Theme**: Verify dark mode is default on first load
-2. **Network**: Test wallet connection switches to Polygon
+2. **Network**: Test wallet connection switches to BNB Smart Chain
 3. **Claim**: Verify 10-day fee schedule displays correctly
 4. **Profile**: Check rarity sections show correct tree counts
 5. **Inventory**: Confirm all balances start at 0
@@ -172,7 +172,7 @@ All requested updates have been successfully implemented in the TreeFi project. 
 - Mock data includes power attributes for all trees
 - Season 0 is set to 10 days throughout the application
 - All monetary transactions now use TF tokens
-- Polygon network is the default and primary network
+- BNB Smart Chain is the default and primary network
 
 ---
 
