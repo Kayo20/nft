@@ -24,7 +24,7 @@
 
 ### 5. Home Page Updates
 - [x] Update total supply text to "100 M TF"
-- [x] Update network references to Polygon
+- [x] Update network references to BNB Chain
 - [x] Update rewards info: "First 200 members (2 free mints + OG role in Discord)"
 - [x] Update chest information in shop
 
@@ -65,7 +65,7 @@
 - src/pages/Landing.tsx - Updated home page
 - src/pages/Shop.tsx - Added chest, updated currency
 - src/lib/constants.ts - Updated network, fees, supply
-- src/lib/web3.ts - Updated to Polygon
+- src/lib/web3.ts - Updated to BNB Chain
 - src/contexts/ThemeContext.tsx - Dark mode default
 - src/components/dashboard/LandSlots.tsx - Festive land design
 - src/types/index.ts - Added power attribute

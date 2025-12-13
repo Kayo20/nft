@@ -45,17 +45,17 @@ export const handler: Handler = async (event) => {
       console.warn('Failed to fetch TF balance from Supabase:', e);
     }
 
-    // Get MATIC balance from on-chain (requires ethers provider)
-    let maticBalance = 0;
+    // Get BNB balance from on-chain (requires ethers provider)
+    let bnbBalance = 0;
     let ethBalance = 0;
     try {
-      // If POLYGON_RPC_URL is set, fetch balance from blockchain
-      if (process.env.POLYGON_RPC_URL) {
+      // If BNB_RPC_URL is set, fetch balance from blockchain
+      if (process.env.BNB_RPC_URL) {
         const { ethers } = await import('ethers');
-        const provider = new ethers.JsonRpcProvider(process.env.POLYGON_RPC_URL);
+        const provider = new ethers.JsonRpcProvider(process.env.BNB_RPC_URL);
         const balance = await provider.getBalance(address);
-        // Convert from Wei to MATIC (divide by 10^18)
-        maticBalance = parseFloat(ethers.formatEther(balance));
+        // Convert from Wei to BNB (divide by 10^18)
+        bnbBalance = parseFloat(ethers.formatEther(balance));
       }
     } catch (e) {
       console.warn('Failed to fetch BNB balance from RPC:', e);
