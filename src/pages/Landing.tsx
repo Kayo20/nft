@@ -303,7 +303,7 @@ export default function Landing() {
             </Badge>
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Season 0 Details</h2>
             <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
-              Season 0 starts in 15 days. Get exclusive early benefits!
+              Season 0 starts on December 20th. Get exclusive early benefits!
             </p>
             
             {/* Countdown Timer */}
