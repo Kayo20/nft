@@ -521,10 +521,11 @@ export default function Landing() {
               <CardContent className="p-8 flex flex-col items-center justify-center h-full gap-4">
                 <div className="w-40 h-40 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-950 dark:to-purple-900 rounded-xl flex items-center justify-center">
                   <img
-                    src="/bnb-logo.svg"
+                    src="https://cryptologos.cc/logos/bnb-bnb-logo.png"
                     alt="BNB Chain Logo"
                     className="w-32 h-32 object-contain"
                     onError={(e) => {
+                      e.currentTarget.onerror = null;
                       e.currentTarget.src = BnbLogo;
                     }}
                   />
