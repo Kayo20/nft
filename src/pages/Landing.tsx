@@ -174,7 +174,7 @@ export default function Landing() {
             className="flex justify-center pt-4"
           >
             <a
-              href="https://www.dexview.com/polygon/0xbCD4e7Cd3571F8010A985b9532E3FB13a12357B0"
+              href="https://www.dexview.com/bsc/0xbCD4e7Cd3571F8010A985b9532E3FB13a12357B0"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -192,7 +192,7 @@ export default function Landing() {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Grow your tree NFT collection, earn rewards, and celebrate the festive season on Polygon
+            Grow your tree NFT collection, earn rewards, and celebrate the festive season on BNB Chain
           </p>
 
           <motion.div
@@ -240,7 +240,7 @@ export default function Landing() {
               <p className="text-sm text-gray-600 dark:text-gray-400">Rarity Tiers</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-[#0F5F3A] dark:text-[#22C55E]">Polygon</p>
+              <p className="text-3xl font-bold text-[#0F5F3A] dark:text-[#22C55E]">BNB Chain</p>
               <p className="text-sm text-gray-600 dark:text-gray-400">Network</p>
             </div>
           </motion.div>
@@ -370,7 +370,7 @@ export default function Landing() {
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">TF Token Tokenomics</h2>
             <p className="text-lg text-gray-600 dark:text-gray-400">
-              Transparent and sustainable token distribution on Polygon
+              Transparent and sustainable token distribution on BNB Chain
             </p>
           </div>
 
@@ -538,9 +538,9 @@ export default function Landing() {
             </Card>
           </motion.a>
 
-          {/* Polygon */}
+          {/* BNB Chain */}
           <motion.a
-            href="https://polygon.technology/"
+            href="https://www.bnbchain.org/"
             target="_blank"
             rel="noopener noreferrer"
             initial={{ opacity: 0, y: 20 }}
@@ -553,16 +553,16 @@ export default function Landing() {
               <CardContent className="p-8 flex flex-col items-center justify-center h-full gap-4">
                 <div className="w-40 h-40 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-950 dark:to-purple-900 rounded-xl flex items-center justify-center">
                   <img
-                    src="https://cryptologos.cc/logos/polygon-matic-logo.png"
-                    alt="Polygon Logo"
+                    src="https://cryptologos.cc/logos/bnb-bnb-logo.png"
+                    alt="BNB Chain Logo"
                     className="w-32 h-32"
                     style={{ objectFit: 'contain' }}
                     onError={(e) => {
-                      e.currentTarget.src = 'https://polygon.technology/_next/static/media/polygon-logo-purple.3b0b6b42.svg';
+                      e.currentTarget.src = 'https://www.bnbchain.org/en/img/bnb-logo.svg';
                     }}
                   />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Polygon</h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">BNB Chain</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                   Ethereum's leading Layer 2 scaling solution for fast, low-cost transactions
                 </p>
@@ -584,7 +584,7 @@ export default function Landing() {
         >
           <h2 className="text-4xl font-bold mb-4">Ready to Start Growing?</h2>
           <p className="text-xl mb-8 opacity-90">
-            Connect your wallet and begin your TreeFi journey on Polygon today
+            Connect your wallet and begin your TreeFi journey on BNB Chain today
           </p>
           <Button
             onClick={() => navigate('/dashboard')}

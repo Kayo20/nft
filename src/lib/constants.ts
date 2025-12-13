@@ -1,8 +1,8 @@
 import { Item, Rarity } from '@/types';
 
-// Updated to Polygon network
-export const POLYGON_CHAIN_ID = 137;
-export const POLYGON_TESTNET_CHAIN_ID = 80001;
+// Updated to BNB Smart Chain network
+export const BNB_CHAIN_ID = 56;
+export const BNB_TESTNET_CHAIN_ID = 97;
 
 export const RARITY_COLORS: Record<Rarity, string> = {
   Uncommon: '#6B7280',
@@ -84,11 +84,11 @@ export const CLAIM_FEE_SCHEDULE = [
 export const ITEM_CONSUMPTION_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
 export const ITEM_BUNDLE_SIZE = 10; // units per bundle
 
-// Fusion mechanics (Polygon-based)
+// Fusion mechanics (BNB Chain-based)
 // Fusion rules: 3x Uncommon→Rare, 3x Rare→Epic, 3x Epic→Legend
 // Legend cannot be fused further
 export const FUSION_COST: Record<Rarity, number> = {
-  Uncommon: 50, // TF equivalent on Polygon
+  Uncommon: 50, // TF equivalent on BNB Chain
   Rare: 150,
   Epic: 500,
   Legendary: 0, // Cannot fuse legendary

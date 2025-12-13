@@ -1,5 +1,5 @@
 import { BrowserProvider, formatEther } from 'ethers';
-import { POLYGON_CHAIN_ID } from './constants';
+import { BNB_CHAIN_ID } from './constants';
 
 declare global {
   interface Window {
@@ -58,7 +58,7 @@ export const getBalance = async (address: string): Promise<string> => {
   }
 };
 
-export const switchToPolygon = async (): Promise<void> => {
+export const switchToBNB = async (): Promise<void> => {
   if (!checkMetaMask()) {
     throw new Error('MetaMask is not installed');
   }
@@ -66,7 +66,7 @@ export const switchToPolygon = async (): Promise<void> => {
   try {
     await window.ethereum!.request({
       method: 'wallet_switchEthereumChain',
-      params: [{ chainId: `0x${POLYGON_CHAIN_ID.toString(16)}` }],
+      params: [{ chainId: `0x${BNB_CHAIN_ID.toString(16)}` }],
     });
   } catch (switchError) {
     const error = switchError as { code?: number };
@@ -76,15 +76,15 @@ export const switchToPolygon = async (): Promise<void> => {
         method: 'wallet_addEthereumChain',
         params: [
           {
-            chainId: `0x${POLYGON_CHAIN_ID.toString(16)}`,
-            chainName: 'Polygon Mainnet',
+            chainId: `0x${BNB_CHAIN_ID.toString(16)}`,
+            chainName: 'BNB Smart Chain',
             nativeCurrency: {
-              name: 'MATIC',
-              symbol: 'MATIC',
+              name: 'BNB',
+              symbol: 'BNB',
               decimals: 18,
             },
-            rpcUrls: ['https://polygon-rpc.com/'],
-            blockExplorerUrls: ['https://polygonscan.com/'],
+            rpcUrls: ['https://bsc-dataseed.bnbchain.org/'],
+            blockExplorerUrls: ['https://bscscan.com/'],
           },
         ],
       });

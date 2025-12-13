@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { WalletState } from '@/types';
-import { connectWallet, disconnectWallet, switchToPolygon } from '@/lib/web3';
+import { connectWallet, disconnectWallet, switchToBNB } from '@/lib/web3';
 import { BrowserProvider } from 'ethers';
 import { requestNonce, verifySiwe, logout } from '@/lib/apiAuth';
 import { getNFTs } from '@/lib/api';
@@ -31,12 +31,12 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     try {
       const result = await connectWallet();
 
-      // Switch to Polygon if not already on it
-      if (result.chainId !== 137) {
+      // Switch to BNB Chain if not already on it
+      if (result.chainId !== 56) {
         try {
-          await switchToPolygon();
+          await switchToBNB();
         } catch (switchErr) {
-          console.warn('Failed to switch to Polygon, continuing anyway:', switchErr);
+          console.warn('Failed to switch to BNB Chain, continuing anyway:', switchErr);
         }
       }
 

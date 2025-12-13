@@ -24,7 +24,7 @@ export default function Profile() {
   };
 
   const openInExplorer = () => {
-    window.open(`https://polygonscan.com/address/${demoAddress}`, '_blank');
+    window.open(`https://bscscan.com/address/${demoAddress}`, '_blank');
   };
 
   const totalYield = nfts.reduce((sum, nft) => sum + nft.dailyYield, 0);

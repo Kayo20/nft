@@ -112,9 +112,9 @@ export const handler: Handler = async (event) => {
         }
       }
 
-      const expectedChain = process.env.POLYGON_CHAIN_ID ? Number(process.env.POLYGON_CHAIN_ID) : 137;
+      const expectedChain = process.env.BNB_CHAIN_ID ? Number(process.env.BNB_CHAIN_ID) : 56;
       if (messageChainId && messageChainId !== expectedChain) {
-        return { statusCode: 401, headers, body: JSON.stringify({ error: 'message chainId is not Polygon' }) };
+        return { statusCode: 401, headers, body: JSON.stringify({ error: 'message chainId is not BNB Chain' }) };
       }
 
       if (messageIssuedAt) {
