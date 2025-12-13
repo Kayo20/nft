@@ -22,8 +22,9 @@ import {
   Clock,
   Award,
 } from 'lucide-react';
-import FourmemeLogo from '@/assets/fourmeme-logo.svg';
 import DexviewLogo from '@/assets/dexview-logo.svg';
+import BnbLogo from '@/assets/bnb-logo.svg';
+import FourmemeLogo from '@/assets/fourmeme-logo.svg';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -472,31 +473,6 @@ export default function Landing() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-          {/* fourMeme (image only) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0 }}
-            whileHover={{ scale: 1.05, y: -8 }}
-          >
-            <Card className="h-full border-2 border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all bg-white dark:bg-gray-900 cursor-default">
-              <CardContent className="p-8 flex flex-col items-center justify-center h-full gap-4">
-                <div className="w-40 h-40 bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-950 dark:to-yellow-900 rounded-xl flex items-center justify-center">
-                  <img
-                    src="/fourmeme.svg"
-                    alt="fourMeme Logo"
-                    className="w-32 h-32 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = FourmemeLogo;
-                    }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
           {/* Dexview */}
           <motion.a
             href="https://www.dexview.com/"
@@ -505,7 +481,7 @@ export default function Landing() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={{ duration: 0.5, delay: 0 }}
             whileHover={{ scale: 1.05, y: -8 }}
           >
             <Card className="h-full border-2 border-blue-300 dark:border-blue-600 hover:shadow-xl transition-all bg-white dark:bg-gray-900 cursor-pointer">
@@ -538,19 +514,18 @@ export default function Landing() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
             whileHover={{ scale: 1.05, y: -8 }}
           >
             <Card className="h-full border-2 border-purple-300 dark:border-purple-600 hover:shadow-xl transition-all bg-white dark:bg-gray-900 cursor-pointer">
               <CardContent className="p-8 flex flex-col items-center justify-center h-full gap-4">
                 <div className="w-40 h-40 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-950 dark:to-purple-900 rounded-xl flex items-center justify-center">
                   <img
-                    src="https://cryptologos.cc/logos/bnb-bnb-logo.png"
+                    src="/bnb-logo.svg"
                     alt="BNB Chain Logo"
-                    className="w-32 h-32"
-                    style={{ objectFit: 'contain' }}
+                    className="w-32 h-32 object-contain"
                     onError={(e) => {
-                      e.currentTarget.src = 'https://www.bnbchain.org/en/img/bnb-logo.svg';
+                      e.currentTarget.src = BnbLogo;
                     }}
                   />
                 </div>
@@ -562,6 +537,31 @@ export default function Landing() {
               </CardContent>
             </Card>
           </motion.a>
+
+          {/* fourMeme (image only) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            whileHover={{ scale: 1.05, y: -8 }}
+          >
+            <Card className="h-full border-2 border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all bg-white dark:bg-gray-900 cursor-default">
+              <CardContent className="p-8 flex flex-col items-center justify-center h-full gap-4">
+                <div className="w-40 h-40 bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-950 dark:to-yellow-900 rounded-xl flex items-center justify-center">
+                  <img
+                    src="/fourmeme.svg"
+                    alt="fourMeme Logo"
+                    className="w-32 h-32 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = FourmemeLogo;
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </section>
 

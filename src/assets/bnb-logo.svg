@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="BNB logo">
+  <rect width="100%" height="100%" fill="#F3BA2F" rx="40"/>
+  <g transform="translate(120,120)" fill="#F3BA2F">
+    <circle cx="136" cy="136" r="60" fill="#F3BA2F" />
+  </g>
+  <g transform="translate(120,120)" fill="#073B4C">
+    <path d="M80 128 L128 80 L176 128 L128 176 Z" />
+    <path d="M128 48 L80 96 L128 144 L176 96 Z" />
+  </g>
+</svg>
