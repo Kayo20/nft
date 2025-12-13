@@ -308,7 +308,7 @@ export default function Landing() {
             
             {/* Countdown Timer */}
             <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-pink-50 dark:from-pink-950/20 dark:via-purple-950/20 dark:to-pink-950/20 rounded-2xl p-8 mb-8 border-2 border-[#E2B13C] dark:border-[#FCD34D]">
-              <Countdown targetDate={new Date('2025-12-17T00:00:00Z')} />
+              <Countdown targetDate={new Date('2025-12-20T00:00:00Z')} />
             </div>
           </div>
 
