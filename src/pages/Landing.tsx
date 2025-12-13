@@ -22,7 +22,7 @@ import {
   Clock,
   Award,
 } from 'lucide-react';
-import PinksaleLogo from '@/assets/pinksale-logo.svg';
+import FourmemeLogo from '@/assets/fourmeme-logo.svg';
 import DexviewLogo from '@/assets/dexview-logo.svg';
 
 export default function Landing() {
@@ -472,38 +472,30 @@ export default function Landing() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-          {/* Pinksale */}
-          <motion.a
-            href="https://www.pinksale.finance/"
-            target="_blank"
-            rel="noopener noreferrer"
+          {/* fourMeme (image only) */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0 }}
             whileHover={{ scale: 1.05, y: -8 }}
           >
-            <Card className="h-full border-2 border-pink-300 dark:border-pink-600 hover:shadow-xl transition-all bg-white dark:bg-gray-900 cursor-pointer">
+            <Card className="h-full border-2 border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all bg-white dark:bg-gray-900 cursor-default">
               <CardContent className="p-8 flex flex-col items-center justify-center h-full gap-4">
-                <div className="w-40 h-40 bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-950 dark:to-pink-900 rounded-xl flex items-center justify-center">
+                <div className="w-40 h-40 bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-950 dark:to-yellow-900 rounded-xl flex items-center justify-center">
                   <img
-                    src="/pinksale.png"
-                    alt="Pinksale Logo"
+                    src="/fourmeme.svg"
+                    alt="fourMeme Logo"
                     className="w-32 h-32 object-contain"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = PinksaleLogo;
+                      e.currentTarget.src = FourmemeLogo;
                     }}
                   />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Pinksale</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                  Leading decentralized launchpad platform for token sales and IDOs
-                </p>
-                <Badge className="bg-pink-500 hover:bg-pink-600 text-white">Fair Launch</Badge>
               </CardContent>
             </Card>
-          </motion.a>
+          </motion.div>
 
           {/* Dexview */}
           <motion.a
