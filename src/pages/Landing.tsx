@@ -29,6 +29,14 @@ import FourmemeLogo from '@/assets/fourmeme-logo.svg';
 export default function Landing() {
   const navigate = useNavigate();
 
+  // Load local NFT assets (eagerly import as URLs) as a fallback or primary source
+  const localNftImages: Record<string, Record<string, string>> = {
+    Uncommon: import.meta.glob('/src/assets/uncommon/*.png', { as: 'url', eager: true }) as Record<string, string>,
+    Rare: import.meta.glob('/src/assets/rare/*.png', { as: 'url', eager: true }) as Record<string, string>,
+    Epic: import.meta.glob('/src/assets/epic/*.png', { as: 'url', eager: true }) as Record<string, string>,
+    Legendary: import.meta.glob('/src/assets/legendary/*.png', { as: 'url', eager: true }) as Record<string, string>,
+  };
+
   const features = [
     {
       icon: <Package className="w-8 h-8" />,
@@ -83,11 +91,15 @@ export default function Landing() {
         const byRarity = rarities.map(r => {
           // Find first image for this rarity
           let found = images.find((img: any) => img.rarity && img.rarity.toLowerCase() === r.name.toLowerCase());
-          
-          // If no image found for this rarity, use first available image
-          if (!found && images.length > 0) {
-            found = images[0];
-            console.log(`No image found for ${r.name}, using ${found.rarity} image instead`);
+
+          // If no image returned from Supabase, fall back to local assets for that rarity
+          if (!found) {
+            const localMap = localNftImages[r.name] || {};
+            const urls = Object.values(localMap || {});
+            if (urls.length > 0) {
+              found = { url: urls[Math.floor(Math.random() * urls.length)], rarity: r.name } as any;
+              console.log(`Using local image for ${r.name}: ${found.url}`);
+            }
           }
           
           console.log(`Rarity ${r.name}: found image:`, found);
@@ -372,28 +384,25 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            {sortedTokenomics.map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="text-center bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 hover:border-[#0F5F3A] dark:hover:border-[#22C55E] transition-all">
-                  <CardHeader>
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0F5F3A] to-[#166C47] dark:from-[#22C55E] dark:to-[#34D399] flex items-center justify-center text-white mx-auto mb-2">
-                      {item.icon}
-                    </div>
-                    <CardTitle className="text-sm text-gray-600 dark:text-gray-400">{item.label}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl font-bold text-[#0F5F3A] dark:text-[#22C55E]">{item.value}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+          <div className="max-w-2xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800">
+                <CardContent className="p-8 text-center">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">TreeFi launches on BNB as a pure community token 🎄</h3>
+                  <ul className="list-disc list-inside mt-4 text-lg text-gray-700 dark:text-gray-300">
+                    <li>No team tokens</li>
+                    <li>No private sales</li>
+                    <li>No insider advantage</li>
+                  </ul>
+                  <p className="mt-4 text-gray-600 dark:text-gray-400">Just a fair launch on BNB, driven by community trust and long-term vision.</p>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </motion.div>
       </section>
