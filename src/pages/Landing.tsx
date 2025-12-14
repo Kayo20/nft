@@ -529,9 +529,9 @@ export default function Landing() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">BNB Chain</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                  Ethereum's leading Layer 2 scaling solution for fast, low-cost transactions
+                  A high-performance Layer 1 blockchain for fast, low-cost transactions and dApp development
                 </p>
-                <Badge className="bg-purple-500 hover:bg-purple-600 text-white">L2 Chain</Badge>
+                <Badge className="bg-purple-500 hover:bg-purple-600 text-white">L1 Chain</Badge>
               </CardContent>
             </Card>
           </motion.a>
