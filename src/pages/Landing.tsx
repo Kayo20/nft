@@ -120,19 +120,24 @@ export default function Landing() {
         if (mounted) setRarityTrees(byRarity);
       } catch (e) {
         console.error('Failed to load NFT images:', e);
-        // Fallback to trees without images (will use placeholder in TreeCard)
-        setRarityTrees(rarities.map(r => ({ 
-          id: Math.floor(Math.random()*10000), 
-          rarity: r.name, 
-          level: 1, 
-          power: r.power, 
-          dailyYield: Math.floor(r.power/10), 
-          health: 100, 
-          image: '', 
-          lastWatered: Date.now(), 
-          lastFertilized: Date.now(), 
-          lastBugTreated: Date.now() 
-        })));
+        // Fallback to local assets for each rarity so all rarities display
+        setRarityTrees(rarities.map(r => {
+          const localMap = localNftImages[r.name] || {};
+          const urls = Object.values(localMap || {});
+          const url = urls.length > 0 ? urls[Math.floor(Math.random() * urls.length)] : '';
+          return {
+            id: Math.floor(Math.random()*10000),
+            rarity: r.name,
+            level: 1,
+            power: r.power,
+            dailyYield: Math.floor(r.power/10),
+            health: 100,
+            image: url,
+            lastWatered: Date.now(),
+            lastFertilized: Date.now(),
+            lastBugTreated: Date.now(),
+          };
+        }));
       }
     })();
     return () => { mounted = false; };
