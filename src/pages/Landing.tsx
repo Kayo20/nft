@@ -174,15 +174,12 @@ export default function Landing() {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="flex justify-center pt-4"
           >
-            <a
-              href="https://four.meme/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href="https://four.meme/" target="_blank" rel="noopener noreferrer" aria-label="Buy TF Token">
               <Button
                 size="lg"
-                className="bg-[#EF4444] hover:bg-[#C43B3B] text-white text-lg px-8 py-4"
+                className="bg-gradient-to-r from-[#FF7A7A] to-[#EF4444] hover:from-[#FF5A5A] hover:to-[#C43B3B] text-white text-lg px-10 py-4 rounded-full shadow-lg transform hover:scale-105 transition-all flex items-center gap-3"
               >
+                <ShoppingCart className="w-5 h-5" />
                 Buy TF Token
               </Button>
             </a>
