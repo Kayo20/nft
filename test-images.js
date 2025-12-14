@@ -4,7 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 config({ path: '.env.local' });
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+// Prefer service role key for listing buckets during local testing
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 const BUCKET = process.env.VITE_NFT_IMAGES_BUCKET || 'nft-images';
 
 console.log('Supabase URL:', SUPABASE_URL);

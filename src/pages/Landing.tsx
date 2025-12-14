@@ -175,7 +175,7 @@ export default function Landing() {
             className="flex justify-center pt-4"
           >
             <a
-              href="https://www.dexview.com/bsc/0xbCD4e7Cd3571F8010A985b9532E3FB13a12357B0"
+              href="https://four.meme/"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -211,7 +211,7 @@ export default function Landing() {
               Start Game
             </Button>
             <a
-              href="https://treefii-1.gitbook.io/treefii-docs"
+              href="https://treefi.gitbook.io/treefi-docs/documentation/"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -551,7 +551,7 @@ export default function Landing() {
               <CardContent className="p-8 flex flex-col items-center justify-center h-full gap-4">
                 <div className="w-40 h-40 bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-950 dark:to-yellow-900 rounded-xl flex items-center justify-center">
                   <img
-                    src="/fourmeme.png"
+                    src="/Fourmeme.png"
                     alt="fourMeme Logo"
                     className="w-32 h-32 object-contain"
                     onError={(e) => {
@@ -560,6 +560,11 @@ export default function Landing() {
                     }}
                   />
                 </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">fourMeme</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                  Community-driven meme token and NFT collection celebrating internet culture and fun
+                </p>
+                <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">Meme</Badge>
               </CardContent>
             </Card>
           </motion.div>
