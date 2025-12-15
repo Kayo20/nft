@@ -29,13 +29,19 @@ import FourmemeLogo from '@/assets/fourmeme-logo.svg';
 export default function Landing() {
   const navigate = useNavigate();
 
-  // Load local NFT assets (eagerly import as URLs) as a fallback or primary source
-  const localNftImages: Record<string, Record<string, string>> = {
-    Uncommon: import.meta.glob('/src/assets/uncommon/*.png', { as: 'url', eager: true }) as Record<string, string>,
-    Rare: import.meta.glob('/src/assets/rare/*.png', { as: 'url', eager: true }) as Record<string, string>,
-    Epic: import.meta.glob('/src/assets/epic/*.png', { as: 'url', eager: true }) as Record<string, string>,
-    Legendary: import.meta.glob('/src/assets/legendary/*.png', { as: 'url', eager: true }) as Record<string, string>,
-  };
+  // Load local NFT assets (eagerly import as URLs) and group by rarity folder
+  const localNftImages: Record<string, string[]> = (() => {
+    const all = import.meta.glob('/src/assets/*/*.png', { as: 'url', eager: true }) as Record<string, string>;
+    const grouped: Record<string, string[]> = {};
+    Object.entries(all).forEach(([path, url]) => {
+      const parts = path.split('/');
+      const folder = parts[parts.length - 2] || '';
+      const key = folder.charAt(0).toUpperCase() + folder.slice(1);
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(url);
+    });
+    return grouped;
+  })();
 
   const features = [
     {
@@ -83,61 +89,43 @@ export default function Landing() {
   useEffect(() => {
     let mounted = true;
     (async () => {
+      // Initialize using local assets as the primary source
+      const initial = rarities.map(r => {
+        const urls = localNftImages[r.name] || [];
+        const url = urls.length > 0 ? urls[Math.floor(Math.random() * urls.length)] : '';
+        return {
+          id: Math.floor(Math.random() * 100000),
+          rarity: r.name,
+          level: 1,
+          power: r.power,
+          dailyYield: Math.floor(r.power / 10),
+          health: 100,
+          image: url,
+          lastWatered: Date.now(),
+          lastFertilized: Date.now(),
+          lastBugTreated: Date.now(),
+        };
+      });
+      if (mounted) setRarityTrees(initial);
+
       try {
         const res: any = await listNftImages();
         const images = res.images || [];
         console.log('Fetched images from Supabase:', images);
-        
-        const byRarity = rarities.map(r => {
-          // Find first image for this rarity
-          let found = images.find((img: any) => img.rarity && img.rarity.toLowerCase() === r.name.toLowerCase());
 
-          // If no image returned from Supabase, fall back to local assets for that rarity
-          if (!found) {
-            const localMap = localNftImages[r.name] || {};
-            const urls = Object.values(localMap || {});
-            if (urls.length > 0) {
-              found = { url: urls[Math.floor(Math.random() * urls.length)], rarity: r.name } as any;
-              console.log(`Using local image for ${r.name}: ${found.url}`);
-            }
+        // Only use Supabase images where local images are missing
+        const updated = initial.map(entry => {
+          if (entry.image) return entry; // keep local primary
+          const found = images.find((img: any) => img.rarity && img.rarity.toLowerCase() === entry.rarity.toLowerCase());
+          if (found) {
+            return { ...entry, image: found.url } as any;
           }
-          
-          console.log(`Rarity ${r.name}: found image:`, found);
-          
-          return {
-            id: Math.floor(Math.random() * 100000),
-            rarity: r.name,
-            level: 1,
-            power: r.power,
-            dailyYield: Math.floor(r.power / 10),
-            health: 100,
-            image: found?.url || '',
-            lastWatered: Date.now(),
-            lastFertilized: Date.now(),
-            lastBugTreated: Date.now(),
-          };
+          return entry;
         });
-        if (mounted) setRarityTrees(byRarity);
+        if (mounted) setRarityTrees(updated);
       } catch (e) {
         console.error('Failed to load NFT images:', e);
-        // Fallback to local assets for each rarity so all rarities display
-        setRarityTrees(rarities.map(r => {
-          const localMap = localNftImages[r.name] || {};
-          const urls = Object.values(localMap || {});
-          const url = urls.length > 0 ? urls[Math.floor(Math.random() * urls.length)] : '';
-          return {
-            id: Math.floor(Math.random()*10000),
-            rarity: r.name,
-            level: 1,
-            power: r.power,
-            dailyYield: Math.floor(r.power/10),
-            health: 100,
-            image: url,
-            lastWatered: Date.now(),
-            lastFertilized: Date.now(),
-            lastBugTreated: Date.now(),
-          };
-        }));
+        // Keep initial local images (they were already set)
       }
     })();
     return () => { mounted = false; };
