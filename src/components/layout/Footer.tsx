@@ -33,7 +33,7 @@ export const Footer = () => {
             <h3 className="font-semibold text-[#1F2937] mb-3">Resources</h3>
             <ul className="space-y-2 text-sm text-[#6B7280]">
               <li><a href="https://treefi.gitbook.io/treefi-docs/documentation/" target="_blank" rel="noopener noreferrer" className="hover:text-[#0F5F3A] transition-colors">Whitepaper</a></li>
-              <li><a href="#" className="hover:text-[#0F5F3A] transition-colors">Documentation</a></li>
+              {/* <li><a href="#" className="hover:text-[#0F5F3A] transition-colors">Documentation</a></li> */}
               <li><a href="#" className="hover:text-[#0F5F3A] transition-colors">FAQ</a></li>
               <li><a href="#" className="hover:text-[#0F5F3A] transition-colors">Support</a></li>
             </ul>
