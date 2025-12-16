@@ -179,7 +179,7 @@ export default function Landing() {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="flex justify-center pt-4"
           >
-            <a href="https://four.meme/" target="_blank" rel="noopener noreferrer" aria-label="Buy TF Token">
+            <a href="https://four.meme/token/0x349fd86a4a5c8d6778d1efeb1adea4337c214444?code=PCR84AGQZJ28" target="_blank" rel="noopener noreferrer" aria-label="Buy TF Token">
               <Button
                 size="lg"
                 className="bg-gradient-to-r from-[#FF7A7A] to-[#EF4444] hover:from-[#FF5A5A] hover:to-[#C43B3B] text-white text-lg px-10 py-4 rounded-full shadow-lg transform hover:scale-105 transition-all flex items-center gap-3"
