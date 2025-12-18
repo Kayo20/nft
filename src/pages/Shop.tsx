@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { ITEMS } from '@/lib/constants';
+import { ITEMS, CHEST_PRICE, TF_TOKEN_CONTRACT, GAME_WALLET } from '@/lib/constants';
+import { transferERC20 } from '@/lib/web3';
 import { ShoppingBag, Coins, Info, Gift, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -24,6 +25,9 @@ export default function Shop() {
   const [purchasingItem, setPurchasingItem] = useState<string | null>(null);
   const [showChestDialog, setShowChestDialog] = useState(false);
   const [openingChest, setOpeningChest] = useState(false);
+  const [transferInProgress, setTransferInProgress] = useState(false);
+  const [transferAction, setTransferAction] = useState<string | null>(null);
+  const [verifyingTx, setVerifyingTx] = useState(false);
   const [giftCode, setGiftCode] = useState('');
   const [validatingCode, setValidatingCode] = useState(false);
 
@@ -31,7 +35,24 @@ export default function Shop() {
     setPurchasingItem(itemId);
     
     try {
-      const success = await purchaseItem(itemId, 1);
+      // Ensure item exists and calculate total cost
+      const item = ITEMS.find(i => i.id === itemId);
+      const qty = 1;
+      if (!item) throw new Error('Item not found');
+
+      const total = Number(item.cost) * qty;
+
+      // Prompt user to sign the TF transfer to the game wallet
+      setTransferInProgress(true);
+      setTransferAction('purchase');
+      toast('Please confirm the TF transfer in your wallet...', { duration: 4000 });
+      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(total));
+      const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
+
+      setTransferInProgress(false);
+      setVerifyingTx(true);
+      const success = await purchaseItem(itemId, qty, txHash);
+      setVerifyingTx(false);
       
       if (success) {
         toast.success('Purchase successful!', {
@@ -43,6 +64,8 @@ export default function Shop() {
         });
       }
     } catch (error) {
+      setTransferInProgress(false);
+      setVerifyingTx(false);
       toast.error('Transaction failed', {
         description: 'An error occurred during purchase',
       });
@@ -54,7 +77,17 @@ export default function Shop() {
   const handleOpenChest = async () => {
     setOpeningChest(true);
     try {
-      const result = await openChest('standard');
+      // Transfer TF to game wallet for chest purchase
+      setTransferInProgress(true);
+      setTransferAction('chest');
+      toast('Please confirm the TF transfer for chest in your wallet...', { duration: 4000 });
+      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(CHEST_PRICE));
+      const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
+
+      setTransferInProgress(false);
+      setVerifyingTx(true);
+      const result = await openChest('standard', txHash);
+      setVerifyingTx(false);
       if (result && result.nft) {
         toast.success('Chest opened!', { description: `You received a ${result.nft.rarity} tree` });
         // refetch NFTs and inventory
@@ -65,6 +98,8 @@ export default function Shop() {
       }
       setShowChestDialog(false);
     } catch (error) {
+      setTransferInProgress(false);
+      setVerifyingTx(false);
       toast.error('Failed to open chest');
     } finally {
       setOpeningChest(false);
@@ -140,6 +175,21 @@ export default function Shop() {
         </Card>
       </motion.div>
 
+        {/* Transfer / Verification Status */}
+        {(transferInProgress || verifyingTx) && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+            <Alert className="border-[#0F5F3A] dark:border-[#22C55E] bg-[#0F5F3A]/5 dark:bg-[#22C55E]/5">
+              <AlertDescription className="text-gray-900 dark:text-white">
+                {transferInProgress ? (
+                  transferAction === 'chest' ? 'Waiting for chest payment signature in wallet...' : 'Waiting for purchase signature in wallet...'
+                ) : (
+                  'Verifying transaction on-chain...'
+                )}
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+
       {/* Chest Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -165,7 +215,7 @@ export default function Shop() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-3xl font-bold text-[#0F5F3A] dark:text-[#22C55E] mb-1">10 TF</p>
+                <p className="text-3xl font-bold text-[#0F5F3A] dark:text-[#22C55E] mb-1">{CHEST_PRICE.toLocaleString()} TF</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Per chest</p>
               </div>
               <Button
@@ -294,7 +344,7 @@ export default function Shop() {
           <div className="space-y-4 py-4">
             <div className="text-center">
               <img src="/chest.png" alt="Chest" className="w-24 h-24 mx-auto mb-4 object-contain" />
-              <p className="text-lg text-gray-900 dark:text-white mb-2">Cost: 10 TF</p>
+              <p className="text-lg text-gray-900 dark:text-white mb-2">Cost: {CHEST_PRICE.toLocaleString()} TF</p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Chests contain only <strong>Uncommon</strong> trees. Higher rarities (Rare, Epic, Legendary) are obtainable only via Fusion (3× same rarity → next rarity).
               </p>

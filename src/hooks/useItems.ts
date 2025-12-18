@@ -34,9 +34,9 @@ export const useItems = (address: string | null) => {
     }
   };
 
-  const purchaseItem = async (itemId: string, quantity: number) => {
+  const purchaseItem = async (itemId: string, quantity: number, txHash?: string) => {
     try {
-      await purchaseItemApi(itemId, quantity);
+      await purchaseItemApi(itemId, quantity, txHash);
       // Refetch inventory after purchase
       await fetchInventory();
       return true;

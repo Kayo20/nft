@@ -126,9 +126,9 @@ CREATE POLICY "Allow public read on items" ON items
 
 -- Insert sample items
 INSERT INTO items (id, name, description, price, type) VALUES
-  ('water', 'Pure Water Bundle', '10 units, 4 hours duration', 10, 'farming'),
-  ('fertilizer', 'Fertilizer Bundle', '10 units, 4 hours duration', 10, 'farming'),
-  ('antiBug', 'Anti Bug Bundle', '10 units, 4 hours duration', 10, 'farming')
+  ('water', 'Pure Water Bundle', '10 units, 4 hours duration', 150000, 'farming'),
+  ('fertilizer', 'Fertilizer Bundle', '10 units, 4 hours duration', 150000, 'farming'),
+  ('antiBug', 'Anti Bug Bundle', '10 units, 4 hours duration', 150000, 'farming')
 ON CONFLICT (id) DO NOTHING;
 
 -- Create seasons table for Season 0 tracking

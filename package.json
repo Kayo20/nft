@@ -2,7 +2,7 @@
   "name": "shadcnui",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 5175",
     "netlify:dev": "netlify dev",
     "migrate": "node scripts/run-migrations.js",
     "check-db": "node scripts/check-nfts.js",

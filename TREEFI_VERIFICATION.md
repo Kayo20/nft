@@ -31,9 +31,9 @@ Complete verification that all TreeFi specification requirements have been imple
   - Test: Attempting Legend fusion returns "Legendary NFTs cannot be fused"
 
 ### Chest System
-- [x] **Cost**: 50 TF per chest
+- [x] **Cost**: 250,000 TF per chest
   - File: `src/lib/constants.ts`
-  - Constant: `CHEST_PRICE = 50`
+  - Constant: `CHEST_PRICE = 250000`
   - Implementation: Cost passed to frontend
 
 - [x] **Guaranteed Uncommon Drop**
@@ -51,21 +51,21 @@ Complete verification that all TreeFi specification requirements have been imple
 #### Items Required
 - [x] **Water Bundle**
   - File: `src/lib/constants.ts`
-  - Cost: 10 TF
+  - Cost: 150,000 TF
   - Bundle size: 10 units
   - Duration: 4 hours
   - Implementation: `ITEMS` array includes water
 
 - [x] **Fertilizer Bundle**
   - File: `src/lib/constants.ts`
-  - Cost: 10 TF
+  - Cost: 150,000 TF
   - Bundle size: 10 units
   - Duration: 4 hours
   - Implementation: `ITEMS` array includes fertilizer
 
 - [x] **Anti Bug Bundle**
   - File: `src/lib/constants.ts`
-  - Cost: 10 TF
+  - Cost: 150,000 TF
   - Bundle size: 10 units
   - Duration: 4 hours
   - Implementation: `ITEMS` array includes antiBug
@@ -172,19 +172,19 @@ Complete verification that all TreeFi specification requirements have been imple
   - Result: Net = gross - fee
 
 ### Fusion Mechanics
-- [x] **Cost: 50 TF (Uncommon)**
+- [x] **Cost: 75,000 TF (Uncommon)**
   - File: `src/lib/constants.ts`
-  - `FUSION_COST.Uncommon = 50`
+  - `FUSION_COST.Uncommon = 75000`
   - Validation: Passed to frontend
 
-- [x] **Cost: 150 TF (Rare)**
+- [x] **Cost: 150,000 TF (Rare)**
   - File: `src/lib/constants.ts`
-  - `FUSION_COST.Rare = 150`
+  - `FUSION_COST.Rare = 150000`
   - Validation: Passed to frontend
 
-- [x] **Cost: 500 TF (Epic)**
+- [x] **Cost: 450,000 TF (Epic)**
   - File: `src/lib/constants.ts`
-  - `FUSION_COST.Epic = 500`
+  - `FUSION_COST.Epic = 450000`
   - Validation: Passed to frontend
 
 - [x] **Cost: 0 TF (Legend)**
@@ -358,7 +358,7 @@ Complete verification that all TreeFi specification requirements have been imple
 
 ### Test Endpoints Available
 - [x] Chest opening → Uncommon guaranteed
-- [x] Item purchasing → 10 TF per bundle
+- [x] Item purchasing → 150,000 TF per bundle
 - [x] Farming activation → All 3 items required
 - [x] Claim rewards → Fee schedule applied
 - [x] Fusion validation → 3x same rarity

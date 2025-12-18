@@ -3,6 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 import { FuseRequestSchema, validateRequest } from "./_utils/validation";
 import { verifySession, corsHeaders, securityHeaders } from "./_utils/auth";
 import { getNftsByIds as mockGetNftsByIds, insertNft as mockInsertNft, burnNfts as mockBurnNfts } from "./_utils/mock_db";
+import { verifyERC20Transfer } from './_utils/web3';
+import { TF_TOKEN_CONTRACT, GAME_WALLET } from '../../src/lib/constants';
+import { FUSION_COST } from '../../src/lib/constants';
 
 let supabase: any;
 try {
@@ -43,7 +46,7 @@ export const handler: Handler = async (event) => {
     if (!validation.valid) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: validation.error }) };
     }
-    const { nftIds } = validation.data!;
+    const { nftIds, txHash } = validation.data!;
 
     // Authenticate using session cookie
     const session = verifySession(event.headers.cookie);
@@ -110,10 +113,22 @@ export const handler: Handler = async (event) => {
     const totalPower = nfts.reduce((sum: number, x: any) => sum + (Number(x.power) || 0), 0);
     const newPower = Math.max(1, Math.floor(totalPower * 1.2)); // 20% boost for fused NFT
 
+    // If txHash provided, verify it corresponds to the expected fusion cost transfer
+    const expectedCost = FUSION_COST[currentRarity as any] || 0;
+    if (txHash && supabase) {
+      try {
+        const ok = await verifyERC20Transfer(txHash, TF_TOKEN_CONTRACT, GAME_WALLET, expectedCost);
+        if (!ok) return { statusCode: 400, headers, body: JSON.stringify({ error: 'on-chain tx verification failed' }) };
+      } catch (err) {
+        console.error('tx verification error', err);
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
+      }
+    }
+
     // Create new NFT (persist or mock)
     let created: any;
     if (!supabase) {
-      created = mockInsertNft({ owner_address: address, rarity: newRarity, power: newPower, metadata: { fused_from: nftIds } });
+      created = mockInsertNft({ owner_address: address, rarity: newRarity, power: newPower, metadata: { fused_from: nftIds, txHash } });
       mockBurnNfts(nftIds as any);
       return { statusCode: 200, headers, body: JSON.stringify({ nft: created }) };
     }
@@ -143,7 +158,7 @@ export const handler: Handler = async (event) => {
 
     // Log fusion history
     await supabase.from("fusion_history").insert([
-      { user_address: address, input_nft_ids: nftIds, result_nft_id: createdData.id, cost: 0 },
+      { user_address: address, input_nft_ids: nftIds, result_nft_id: createdData.id, cost: 0, tx_hash: txHash },
     ]);
 
     return { statusCode: 200, headers, body: JSON.stringify({ nft: createdData }) };

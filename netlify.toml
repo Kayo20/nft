@@ -5,6 +5,7 @@
 
 [dev]
   command = "pnpm dev"
+  targetPort = 5175
 
 [[redirects]]
   # Specific mapping for auth endpoints so frontend path /api/auth/nonce

@@ -88,13 +88,13 @@ TREEFI_TESTING_GUIDE.md        ✨ NEW - Testing guide
 
 ### ✅ Chest System
 - Always gives Uncommon (100% guaranteed)
-- Costs 50 TF
+- Costs 250,000 TF
 - Status: **COMPLETE**
 
 ### ✅ Item System  
-- Water: 10 TF per bundle (10 units, 4 hours)
-- Fertilizer: 10 TF per bundle (10 units, 4 hours)
-- Anti Bug: 10 TF per bundle (10 units, 4 hours)
+- Water: 150,000 TF per bundle (10 units, 4 hours)
+- Fertilizer: 150,000 TF per bundle (10 units, 4 hours)
+- Anti Bug: 150,000 TF per bundle (10 units, 4 hours)
 - Status: **COMPLETE**
 
 ### ✅ Farming System
@@ -119,9 +119,9 @@ TREEFI_TESTING_GUIDE.md        ✨ NEW - Testing guide
 - Status: **COMPLETE**
 
 ### ✅ Fusion System
-- 3x Uncommon → Rare (50 TF)
-- 3x Rare → Epic (150 TF)
-- 3x Epic → Legend (500 TF)
+- 3x Uncommon → Rare (75,000 TF)
+- 3x Rare → Epic (150,000 TF)
+- 3x Epic → Legend (450,000 TF)
 - Legend cannot be fused
 - Status: **COMPLETE**
 
@@ -208,7 +208,7 @@ Read: TREEFI_ARCHITECTURE.md
 **File**: `src/lib/constants.ts`
 - Season 0 dates
 - Daily rewards (0.5, 2, 8, 15 TF)
-- Item pricing (10 TF each)
+- Item pricing (150,000 TF each)
 - Claim fee schedule
 - Fusion rules & costs
 - Item consumption interval
@@ -286,7 +286,7 @@ The backend is **100% complete** and ready for:
 
 2. Shop
    - Display item bundles
-   - Show prices (10 TF each)
+   - Show prices (150,000 TF each)
    - Purchase button
 
 3. Fusion

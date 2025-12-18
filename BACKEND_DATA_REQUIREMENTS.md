@@ -176,7 +176,7 @@ Response: { "ok": true, "slot": { "index": number, "nftId": number | null } }
 | **Item Catalog** | List of all shop items | `ITEMS` constant + `useItems()` | Currently: mock items |
 | **Item Card** | Item details (name, price, image) | `ITEMS` constant | Static in codebase |
 | **Item Card** | Current inventory count | `useItems()` → `inventory[itemId]` | Current: mock |
-| **Chest** | Chest price | Hardcoded (10 TF) | OK as constant |
+| **Chest** | Chest price | Hardcoded (250,000 TF) | OK as constant |
 | **Chest** | Chest type availability | Static for now | Future: fetch from DB |
 
 #### Backend Endpoints Needed
@@ -346,7 +346,7 @@ Response: {
 ```
 - **Status**: ✅ Implemented (`netlify/functions/open-chest.ts`)
 - **Backend Logic**:
-  - Verify user has 10 TF (standard) or 50 TF (premium)
+  - Verify user has required TF for selected chest type (standard/premium)
   - Deduct TF
   - Generate random rarity based on weights
   - Mint NFT with randomized attributes
@@ -412,7 +412,7 @@ For each NFT in inventory, backend should track:
 | Component | Data | Source | Notes |
 |-----------|------|--------|-------|
 | **Hero Section** | Season badge | Static (Season 0) | Hardcoded OK |
-| **Hero Stats** | Total supply (100M TF) | Static constant | Hardcoded OK |
+| **Hero Stats** | Total supply (1B TF) | Static constant | Hardcoded OK |
 | **Hero Stats** | Rarity count (4) | Static constant | Hardcoded OK |
 | **Features List** | Feature cards | Static array | Hardcoded OK |
 | **Rarity Display** | Sample tree per rarity | Generated from mock | Uses `generateMockNFTs()` |

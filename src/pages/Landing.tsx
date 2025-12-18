@@ -31,9 +31,12 @@ export default function Landing() {
 
   // Load local NFT assets (eagerly import as URLs) and group by rarity folder
   const localNftImages: Record<string, string[]> = (() => {
-    const all = import.meta.glob('/src/assets/*/*.png', { as: 'url', eager: true }) as Record<string, string>;
+    // Updated to use Vite's new glob query format (replace deprecated `as: 'url'`)
+    // `query: '?url'` returns an object with `{ default: '<url>' }` when combined with `import: 'default'`
+    const allImports = import.meta.glob('/src/assets/*/*.png', { query: '?url', import: 'default', eager: true }) as Record<string, { default: string }>;
     const grouped: Record<string, string[]> = {};
-    Object.entries(all).forEach(([path, url]) => {
+    Object.entries(allImports).forEach(([path, mod]) => {
+      const url = (mod && (mod as any).default) || '';
       const parts = path.split('/');
       const folder = parts[parts.length - 2] || '';
       const key = folder.charAt(0).toUpperCase() + folder.slice(1);
@@ -138,7 +141,7 @@ export default function Landing() {
     { label: 'Liquidity', value: '10%', icon: <Users className="w-5 h-5" />, percent: 10 },
     { label: 'Team', value: '5%', icon: <Award className="w-5 h-5" />, percent: 5 },
     { label: 'Marketing', value: '5%', icon: <Sparkles className="w-5 h-5" />, percent: 5 },
-    { label: 'Total Supply', value: '100M TF', icon: <Coins className="w-5 h-5" />, percent: null },
+    { label: 'Total Supply', value: '1B TF', icon: <Coins className="w-5 h-5" />, percent: null },
   ];
   // Always show Total Supply first, then the rest sorted by percent descending
   const sortedTokenomics = [
@@ -235,7 +238,7 @@ export default function Landing() {
             className="grid grid-cols-3 gap-4 pt-12 max-w-2xl mx-auto"
           >
             <div className="text-center">
-              <p className="text-3xl font-bold text-[#0F5F3A] dark:text-[#22C55E]">100M TF</p>
+              <p className="text-3xl font-bold text-[#0F5F3A] dark:text-[#22C55E]">1B TF</p>
               <p className="text-sm text-gray-600 dark:text-gray-400">Total Supply</p>
             </div>
             <div className="text-center">

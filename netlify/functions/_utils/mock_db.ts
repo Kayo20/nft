@@ -69,10 +69,10 @@ export function resetMockData() {
   transactions.length = 0;
   nextId = 1;
   nextFarmingId = 1;
-  // Seed items per TreeFi Spec: 10 TF per bundle, 10 units per bundle
-  items.set('water', { id: 'water', name: 'Pure Water Bundle (10 units)', price: 10 }); // 10 TF per bundle
-  items.set('fertilizer', { id: 'fertilizer', name: 'Fertilizer Bundle (10 units)', price: 10 });
-  items.set('antiBug', { id: 'antiBug', name: 'Anti Bug Bundle (10 units)', price: 10 });
+  // Seed items per TreeFi Spec: 150,000 TF per bundle, 10 units per bundle
+  items.set('water', { id: 'water', name: 'Pure Water Bundle (10 units)', price: 150000 }); // 150,000 TF per bundle
+  items.set('fertilizer', { id: 'fertilizer', name: 'Fertilizer Bundle (10 units)', price: 150000 });
+  items.set('antiBug', { id: 'antiBug', name: 'Anti Bug Bundle (10 units)', price: 150000 });
 
   // Seed demo NFTs with Supabase image URLs
   const demoAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';

@@ -9,7 +9,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { fuseNFTs } from '@/lib/api';
-import { FUSION_COST, RARITY_ORDER } from '@/lib/constants';
+import { FUSION_COST, RARITY_ORDER, TF_TOKEN_CONTRACT, GAME_WALLET } from '@/lib/constants';
+import { transferERC20 } from '@/lib/web3';
 import { Zap, ArrowRight, Sparkles, AlertTriangle, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -25,6 +26,8 @@ export default function Fusion() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [fusionResult, setFusionResult] = useState<NFTTree | null>(null);
   const [showResultDialog, setShowResultDialog] = useState(false);
+  const [transferInProgress, setTransferInProgress] = useState(false);
+  const [verifyingTx, setVerifyingTx] = useState(false);
 
   const handleSelectTree = (tree: NFTTree) => {
     // toggle selection: if already selected, remove it; otherwise put in first empty slot
@@ -86,7 +89,17 @@ export default function Fusion() {
     setIsFusing(true);
 
     try {
-      const result = await fuseNFTs(selectedTrees.map(t => t.id));
+      // Transfer TF for fusion cost first
+      if (!fusionCost) throw new Error('Invalid fusion cost');
+      setTransferInProgress(true);
+      toast('Please confirm the TF transfer for fusion in your wallet...', { duration: 4000 });
+      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(fusionCost));
+      const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
+
+      setTransferInProgress(false);
+      setVerifyingTx(true);
+      const result = await fuseNFTs(selectedTrees.map(t => t.id), txHash);
+      setVerifyingTx(false);
 
       if (result && result.nft) {
         setFusionResult(result.nft);
@@ -103,6 +116,8 @@ export default function Fusion() {
         });
       }
     } catch (error) {
+      setTransferInProgress(false);
+      setVerifyingTx(false);
       toast.error('Transaction failed', {
         description: 'An error occurred during fusion',
       });
@@ -193,9 +208,19 @@ export default function Fusion() {
               <Alert className="mt-6 border-[#E2B13C] dark:border-[#FCD34D] bg-[#E2B13C]/5 dark:bg-[#FCD34D]/5">
                 <Sparkles className="h-4 w-4 text-[#E2B13C] dark:text-[#FCD34D]" />
                 <AlertDescription className="text-gray-900 dark:text-white">
-                  Fusion Cost: <strong>{fusionCost} TF</strong> • Result: <strong>{resultRarity} Tree</strong>
+                  Fusion Cost: <strong>{fusionCost.toLocaleString()} TF</strong> • Result: <strong>{resultRarity} Tree</strong>
                 </AlertDescription>
               </Alert>
+            )}
+
+            {(transferInProgress || verifyingTx) && (
+              <div className="mt-4">
+                <Alert className="border-[#E2B13C] dark:border-[#FCD34D] bg-[#E2B13C]/5 dark:bg-[#FCD34D]/5">
+                  <AlertDescription className="text-gray-900 dark:text-white">
+                    {transferInProgress ? 'Waiting for fusion payment signature in wallet...' : 'Verifying fusion transaction on-chain...'}
+                  </AlertDescription>
+                </Alert>
+              </div>
             )}
 
             {/* Action Buttons */}

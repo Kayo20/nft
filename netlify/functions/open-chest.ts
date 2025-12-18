@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { OpenChestSchema, validateRequest } from "./_utils/validation";
 import { verifySession, corsHeaders, securityHeaders } from "./_utils/auth";
 import { insertNft as mockInsertNft } from "./_utils/mock_db";
+import { verifyERC20Transfer } from './_utils/web3';
+import { TF_TOKEN_CONTRACT, GAME_WALLET, CHEST_PRICE } from '../../src/lib/constants';
 
 let supabase: any;
 try {
@@ -50,7 +52,7 @@ export const handler: Handler = async (event) => {
     if (!validation.valid) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: validation.error }) };
     }
-    const { type } = validation.data!;
+    const { type, txHash } = validation.data!;
 
     // Authenticate using session cookie
     const session = verifySession(event.headers.cookie);
@@ -63,8 +65,19 @@ export const handler: Handler = async (event) => {
     const power = POWER_MAP[rarity] || 0;
 
     if (!supabase) {
-      const created = mockInsertNft({ owner_address: address, rarity, power, metadata: { chest_type: type } });
+      const created = mockInsertNft({ owner_address: address, rarity, power, metadata: { chest_type: type, txHash } });
       return { statusCode: 200, headers, body: JSON.stringify({ nft: created }) };
+    }
+
+    // If an on-chain txHash is provided, verify it corresponds to the chest price transfer
+    if (txHash) {
+      try {
+        const verified = await verifyERC20Transfer(txHash, TF_TOKEN_CONTRACT, GAME_WALLET, CHEST_PRICE);
+        if (!verified) return { statusCode: 400, headers, body: JSON.stringify({ error: 'on-chain tx verification failed' }) };
+      } catch (err) {
+        console.error('tx verification error', err);
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
+      }
     }
 
     const { data: created, error: insertErr } = await supabase
@@ -77,7 +90,7 @@ export const handler: Handler = async (event) => {
           daily_yield: 0,
           health: 100,
           image_url: null,
-          metadata: { chest_type: type },
+          metadata: { chest_type: type, txHash },
           status: "active",
         },
       ])

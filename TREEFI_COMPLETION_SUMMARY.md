@@ -19,13 +19,13 @@ Successfully implemented comprehensive TreeFi gaming specification across the en
 - Rewards stop when season ends
 
 ✅ **Item Pricing & Bundle System**
-- Water: 10 TF per bundle (10 units, 4-hour duration)
-- Fertilizer: 10 TF per bundle (10 units, 4-hour duration)
-- Anti Bug: 10 TF per bundle (10 units, 4-hour duration)
+- Water: 150,000 TF per bundle (10 units, 4-hour duration)
+- Fertilizer: 150,000 TF per bundle (10 units, 4-hour duration)
+- Anti Bug: 150,000 TF per bundle (10 units, 4-hour duration)
 
 ✅ **Fusion Mechanics**
 - Strict rules: 3x Uncommon → Rare, 3x Rare → Epic, 3x Epic → Legend
-- Cost: 50 TF (Uncommon), 150 TF (Rare), 500 TF (Epic)
+- Cost: 75,000 TF (Uncommon), 150,000 TF (Rare), 450,000 TF (Epic)
 - Legend cannot be fused
 
 ✅ **Claim Fee Schedule**
@@ -65,7 +65,7 @@ Successfully implemented comprehensive TreeFi gaming specification across the en
 ✅ **`netlify/functions/open-chest.ts`** - UPDATED
 - Enforces 100% Uncommon drop rate
 - No random rarity selection
-- Chest costs 50 TF per bundle
+- Chest costs 250,000 TF per chest
 - Includes mock DB fallback
 
 ✅ **`netlify/functions/fuse.ts`** - UPDATED
@@ -77,7 +77,7 @@ Successfully implemented comprehensive TreeFi gaming specification across the en
 - Includes mock DB fallback
 
 ✅ **`netlify/functions/shop-purchase.ts`** - VALIDATED
-- Item pricing: 10 TF per bundle (all items)
+- Item pricing: 150,000 TF per bundle (all items)
 - Bundle system integrated
 - Inventory deduction on purchase
 - Works with mock DB
@@ -101,9 +101,9 @@ Successfully implemented comprehensive TreeFi gaming specification across the en
 ### 5. Database Schema (`supabase/migrations/001_init_schema.sql`)
 
 ✅ **Items Table - Updated**
-- water: 10 TF per bundle
-- fertilizer: 10 TF per bundle
-- antiBug: 10 TF per bundle
+- water: 150,000 TF per bundle
+- fertilizer: 150,000 TF per bundle
+- antiBug: 150,000 TF per bundle
 
 ✅ **New `seasons` Table**
 - Tracks season number, start/end dates
@@ -131,7 +131,7 @@ Successfully implemented comprehensive TreeFi gaming specification across the en
 - `startFarming()`: Create new farming state
 - `getFarmingState()`: Retrieve farming data
 - `updateFarmingState()`: Update farming progress
-- Correct item pricing (10 TF per bundle)
+- Correct item pricing (150,000 TF per bundle)
 
 ✅ **In-Memory Persistence**
 - Farming states persist across function calls during development
@@ -146,8 +146,8 @@ Successfully implemented comprehensive TreeFi gaming specification across the en
 ## Game Flow - Now Complete
 
 ### Player Journey
-1. **Buy Chest** (50 TF) → Get Uncommon NFT ✅
-2. **Purchase Items** (10 TF each) → Buy water, fertilizer, antiBug ✅
+1. **Buy Chest** (250,000 TF) → Get Uncommon NFT ✅
+2. **Purchase Items** (150,000 TF each) → Buy water, fertilizer, antiBug ✅
 3. **Start Farming** → Select NFT + activate all 3 items ✅
    - All 3 items must be active simultaneously
    - Each has 4-hour duration
@@ -160,9 +160,9 @@ Successfully implemented comprehensive TreeFi gaming specification across the en
    - Fee: 50% day 1, decreasing to 0% day 10
    - Season 0: Dec 15-25 only
 6. **Fuse to Upgrade** → Combine 3 NFTs of same rarity ✅
-   - 3x Uncommon → Rare (50 TF cost)
-   - 3x Rare → Epic (150 TF cost)
-   - 3x Epic → Legendary (500 TF cost)
+   - 3x Uncommon → Rare (75,000 TF cost)
+   - 3x Rare → Epic (150,000 TF cost)
+   - 3x Epic → Legendary (450,000 TF cost)
    - Legend cannot be fused
 
 ## Key Validations Implemented
@@ -259,7 +259,7 @@ Duration: 10 days (864,000,000 ms)
 
 ### Item Mechanics
 ```typescript
-All items: 10 TF per bundle
+All items: 150,000 TF per bundle
 All items: 10 units per bundle
 All items: 4-hour duration
 Requirement: ALL 3 must be active for farming
@@ -286,7 +286,7 @@ After Season: No claims
 The frontend is now ready to display all TreeFi mechanics:
 
 1. **Dashboard**: Show farming status, active items, countdown timer
-2. **Shop**: Display item bundles (10 TF, 4 hours, 10 units)
+2. **Shop**: Display item bundles (150,000 TF, 4 hours, 10 units)
 3. **Fusion**: Prevent Legend selection, show costs
 4. **Claim**: Show fee schedule, calculate net rewards
 

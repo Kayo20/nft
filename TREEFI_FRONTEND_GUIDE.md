@@ -8,7 +8,7 @@ Quick reference for integrating TreeFi game mechanics into frontend UI component
 import { 
   DAILY_REWARDS,           // { Uncommon: 0.5, Rare: 2, Epic: 8, Legendary: 15 }
   CLAIM_FEE_SCHEDULE,      // [{ day: 1, fee: 50 }, ..., { day: 10, fee: 0 }]
-  CHEST_PRICE,             // 50 TF
+  CHEST_PRICE,             // 250,000 TF
   ITEM_CONSUMPTION_INTERVAL, // 4 * 60 * 60 * 1000 (4 hours)
   SEASON_ZERO_START,       // Dec 15, 2024
   SEASON_ZERO_END,         // Dec 25, 2024
@@ -78,7 +78,7 @@ const response = await claimRewards(nftId);
 import { purchaseItem } from '@/lib/api';
 
 const response = await purchaseItem('water', 1);
-// Deducts 10 TF, adds 1 bundle of water (10 units, 4 hours)
+// Deducts 150,000 TF, adds 1 bundle of water (10 units, 4 hours)
 ```
 
 ### Fuse NFTs
@@ -310,7 +310,7 @@ const estimatedTotalReward = rewardPerHour * farmingHours;
 
 ## Testing Checklist
 
-- [ ] Purchase items (10 TF each)
+- [ ] Purchase items (150,000 TF each)
 - [ ] Start farming (requires all 3 items)
 - [ ] Verify farming active status
 - [ ] Wait 4+ hours, verify farming stops

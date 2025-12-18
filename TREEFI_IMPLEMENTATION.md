@@ -25,9 +25,9 @@ Rewards are earned only when farming is **active** (all 3 items are active):
 
 ### 3. Farming System
 **Requirements**: All 3 items must be **simultaneously active** for farming to generate rewards:
-- **Water Bundle**: 10 TF per bundle, 10 units, 4-hour duration
-- **Fertilizer Bundle**: 10 TF per bundle, 10 units, 4-hour duration
-- **Anti Bug Bundle**: 10 TF per bundle, 10 units, 4-hour duration
+- **Water Bundle**: 150,000 TF per bundle, 10 units, 4-hour duration
+- **Fertilizer Bundle**: 150,000 TF per bundle, 10 units, 4-hour duration
+- **Anti Bug Bundle**: 150,000 TF per bundle, 10 units, 4-hour duration
 
 **If any item expires**, farming stops immediately and no rewards are generated.
 
@@ -50,14 +50,14 @@ Season 0 is 10 days (Dec 15 - Dec 25, 2024)
 **After Season 0 ends**: No rewards can be claimed.
 
 ### 5. Chest Purchase
-- **Cost**: 50 TF per chest
+- **Cost**: 250,000 TF per chest
 - **Guaranteed Output**: Always Uncommon NFT (100% drop rate)
 
 ### 6. Fusion Rules
 **Cost** (deducted in BNB via fusion contracts):
-- 3x Uncommon → Rare: 50 TF
-- 3x Rare → Epic: 150 TF
-- 3x Epic → Legend: 500 TF
+- 3x Uncommon → Rare: 75,000 TF
+- 3x Rare → Epic: 150,000 TF
+- 3x Epic → Legend: 450,000 TF
 - Legendary cannot be fused
 
 **Input Validation**:
@@ -83,7 +83,7 @@ Season 0 is 10 days (Dec 15 - Dec 25, 2024)
 - [x] `DAILY_REWARDS`: 0.5, 2, 8, 15 TF per rarity
 - [x] `SEASON_ZERO_START` & `SEASON_ZERO_END`: Dec 15-25, 2024
 - [x] `SEASON_ZERO_DURATION`: 10 days in milliseconds
-- [x] `ITEMS`: water, fertilizer, antiBug (10 TF each)
+- [x] `ITEMS`: water, fertilizer, antiBug (150,000 TF each)
 - [x] `ITEM_BUNDLE_SIZE`: 10 units per bundle
 - [x] `ITEM_CONSUMPTION_INTERVAL`: 4 hours
 - [x] `CLAIM_FEE_SCHEDULE`: 10-step fee schedule (50%→0%)
@@ -117,7 +117,7 @@ Season 0 is 10 days (Dec 15 - Dec 25, 2024)
 - [x] Fall back to mock DB
 
 ##### `netlify/functions/shop-purchase.ts`
-- [x] Item pricing: 10 TF per bundle (all items)
+- [x] Item pricing: 150,000 TF per bundle (all items)
 - [x] Bundle concept integrated (10 units per bundle)
 - [x] Deduct inventory on purchase
 - [x] Transaction logging
@@ -140,7 +140,7 @@ Season 0 is 10 days (Dec 15 - Dec 25, 2024)
 - [x] Fall back to mock DB
 
 #### Database Schema (`supabase/migrations/001_init_schema.sql`)
-- [x] Updated `items` table: water, fertilizer, antiBug (10 TF each)
+- [x] Updated `items` table: water, fertilizer, antiBug (150,000 TF each)
 - [x] Created `seasons` table: season_number, start_date, end_date
 - [x] Created `farming_state` table: nft_id, active_items, is_farming_active
 - [x] Created `claim_history` table: Track claims and rewards
@@ -148,7 +148,7 @@ Season 0 is 10 days (Dec 15 - Dec 25, 2024)
 - [x] Pre-populated Season 0 (Dec 15-25, 2024)
 
 #### Mock DB (`netlify/functions/_utils/mock_db.ts`)
-- [x] Correct item pricing (10 TF per bundle)
+- [x] Correct item pricing (150,000 TF per bundle)
 - [x] `startFarming()`: Create farming state
 - [x] `getFarmingState()`: Retrieve farming data
 - [x] `updateFarmingState()`: Update farming progress
@@ -171,14 +171,14 @@ The following frontend pages should be updated to display the TreeFi mechanics:
 
 #### `src/pages/Shop.tsx`
 - [ ] Display item bundles: water, fertilizer, antiBug
-- [ ] Show bundle pricing: 10 TF each
+- [ ] Show bundle pricing: 150,000 TF each
 - [ ] Indicate "10 units, 4 hours duration"
 - [ ] Purchase form with quantity selector
 
 #### `src/pages/Fusion.tsx`
 - [ ] Disable Legendary NFTs (show "Cannot be fused" message)
 - [ ] Validate 3x same rarity requirement
-- [ ] Show fusion cost (50/150/500 TF by rarity)
+- [ ] Show fusion cost (75,000/150,000/450,000 TF by rarity)
 - [ ] Display output rarity preview
 
 #### `src/pages/Claim.tsx`
@@ -266,7 +266,7 @@ Epic + Epic + Epic → Legendary
 ### Local Testing (Mock DB)
 - [ ] Connect wallet → SIWE auth works
 - [ ] Buy chest → Receive Uncommon NFT
-- [ ] Purchase items → Water, fertilizer, antiBug (10 TF each)
+- [ ] Purchase items → Water, fertilizer, antiBug (150,000 TF each)
 - [ ] Start farming → All 3 items required
 - [ ] Claim rewards → Fee schedule applies
 - [ ] Fuse 3x Uncommon → Get Rare

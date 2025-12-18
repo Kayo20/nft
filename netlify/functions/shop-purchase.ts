@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { PurchaseRequestSchema, validateRequest } from "./_utils/validation";
 import { verifySession, corsHeaders, securityHeaders } from "./_utils/auth";
 import { getItemById as mockGetItemById, createTransaction as mockCreateTransaction, upsertInventory as mockUpsertInventory } from "./_utils/mock_db";
+import { verifyERC20Transfer } from "./_utils/web3";
+import { TF_TOKEN_CONTRACT, GAME_WALLET } from '../../src/lib/constants';
 
 let supabase: any;
 try {
@@ -33,7 +35,7 @@ export const handler: Handler = async (event) => {
     if (!validation.valid) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: validation.error }) };
     }
-    const { itemId, qty } = validation.data!;
+    const { itemId, qty, txHash } = validation.data!;
 
     // Authenticate using session cookie
     const session = verifySession(event.headers.cookie);
@@ -47,7 +49,8 @@ export const handler: Handler = async (event) => {
       const item = mockGetItemById(itemId);
       if (!item) return { statusCode: 400, headers, body: JSON.stringify({ error: "item not found (mock)" }) };
       const total = Number(item.price || 0) * Number(qty);
-      const tx = mockCreateTransaction(address, 'purchase', total, { itemId, qty });
+      // In mock mode, we can't verify on-chain txs — accept txHash for local dev
+      const tx = mockCreateTransaction(address, 'purchase', total, { itemId, qty, txHash });
       mockUpsertInventory(address, itemId, qty);
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true, tx }) };
     }
@@ -58,10 +61,21 @@ export const handler: Handler = async (event) => {
 
     const total = Number(item.price || 0) * Number(qty);
 
-    // Create transaction row
+    // If client provided an on-chain txHash, verify it corresponds to a TF transfer to our game wallet
+    if (txHash) {
+      try {
+        const verified = await verifyERC20Transfer(txHash, TF_TOKEN_CONTRACT, GAME_WALLET, total);
+        if (!verified) return { statusCode: 400, headers, body: JSON.stringify({ error: 'on-chain tx verification failed' }) };
+      } catch (err) {
+        console.error('tx verification error', err);
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
+      }
+    }
+
+    // Create transaction row (include on-chain tx hash if provided)
     const { data: tx, error: txErr } = await supabase
       .from("transactions")
-      .insert([{ user_address: address, type: "purchase", amount: total, metadata: { itemId, qty } }])
+      .insert([{ user_address: address, type: "purchase", amount: total, metadata: { itemId, qty, txHash } }])
       .select()
       .single();
     if (txErr) throw txErr;

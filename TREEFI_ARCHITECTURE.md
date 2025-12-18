@@ -23,7 +23,7 @@
 │  │ Game Logic Functions (All with Mock DB Fallback)    │  │
 │  │                                                       │  │
 │  │  CHEST SYSTEM                                        │  │
-│  │  • open-chest.ts → Always Uncommon (50 TF)          │  │
+│  │  • open-chest.ts → Always Uncommon (250,000 TF)          │  │
 │  │                                                       │  │
 │  │  FARMING SYSTEM ✨                                  │  │
 │  │  • start-farming.ts → Activate all 3 items          │  │
@@ -33,7 +33,7 @@
 │  │  • fuse.ts → 3x same → next tier (Legend blocked)   │  │
 │  │                                                       │  │
 │  │  SHOP SYSTEM                                         │  │
-│  │  • shop-purchase.ts → Buy items (10 TF each)        │  │
+│  │  • shop-purchase.ts → Buy items (150,000 TF each)        │  │
 │  │                                                       │  │
 │  │  NFT SYSTEM                                          │  │
 │  │  • get-nfts.ts → Fetch user's NFTs                  │  │
@@ -73,7 +73,7 @@
 
   [User]
     ↓
-  Buy Chest (50 TF)
+  Buy Chest (250,000 TF)
     ↓
   [open-chest] → Uncommon NFT (guaranteed)
     ↓
@@ -86,7 +86,7 @@
 
   [User]
     ↓
-  Buy Items (10 TF × 3)
+  Buy Items (150,000 TF × 3)
     ↓
   [shop-purchase] × 3 → water, fertilizer, antiBug
     ↓
@@ -142,7 +142,7 @@
 
   Option A: RESUME FARMING
     ↓
-  [User] Buy more items (10 TF × 3)
+  [User] Buy more items (150,000 TF × 3)
     ↓
   [start-farming] again
     ↓
@@ -175,13 +175,13 @@
     • Validates exactly 3 NFTs
     • Validates all Uncommon
     • Validates not Legend
-    • Deducts 50 TF from balance
+    • Deducts 75,000 TF from balance
     • Creates new Rare NFT
     • Marks 3 inputs as "burned"
     ↓
   Result: New Rare NFT
   Inventory: [Rare #2, 0 items]
-  Balance: -50 TF
+  Balance: -75,000 TF
 ```
 
 ## Database Schema Relationships
@@ -227,7 +227,7 @@
 ├──────────────┤
 │ id (*)       │  "water", "fertilizer", "antiBug"
 │ name         │
-│ price        │  10 TF each
+│ price        │  150,000 TF each
 │ type         │  "farming"
 ├──────────────┤
 │ water        │
@@ -430,7 +430,7 @@ Frontend:
 
 Testing:
   ☐ Buy chest → Uncommon NFT
-  ☐ Buy items → 10 TF each
+  ☐ Buy items → 150,000 TF each
   ☐ Start farming → All 3 required
   ☐ Wait 4 hours → Farming stops
   ☐ Claim rewards → Fee applied

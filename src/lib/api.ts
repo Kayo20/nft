@@ -23,13 +23,13 @@ export async function getNFTs(owner: string) {
   return data.nfts || [];
 }
 
-export async function fuseNFTs(nftIds: Array<number | string>) {
+export async function fuseNFTs(nftIds: Array<number | string>, txHash?: string) {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/.netlify/functions/fuse`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ nftIds }),
+    body: JSON.stringify({ nftIds, txHash }),
   });
   if (!res.ok) {
     const txt = await res.text();
@@ -38,13 +38,13 @@ export async function fuseNFTs(nftIds: Array<number | string>) {
   return res.json();
 }
 
-export async function openChest(type: string = 'standard') {
+export async function openChest(type: string = 'standard', txHash?: string) {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/.netlify/functions/open-chest`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ type }),
+    body: JSON.stringify({ type, txHash }),
   });
   if (!res.ok) {
     const txt = await res.text();
@@ -53,13 +53,13 @@ export async function openChest(type: string = 'standard') {
   return res.json();
 }
 
-export async function purchaseItem(itemId: string, qty: number) {
+export async function purchaseItem(itemId: string, qty: number, txHash?: string) {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/.netlify/functions/shop-purchase`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ itemId, qty }),
+    body: JSON.stringify({ itemId, qty, txHash }),
   });
   if (!res.ok) {
     const txt = await res.text();

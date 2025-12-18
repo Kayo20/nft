@@ -45,7 +45,7 @@ Result: Wallet connected ✓
 
 ### 2. Buy Chest (1 minute)
 ```
-Action: Go to Dashboard → Click "Buy Chest" (50 TF)
+Action: Go to Dashboard → Click "Buy Chest" (250,000 TF)
 Expected: Get Uncommon NFT (guaranteed)
 Verify:
   ☐ NFT appears in inventory
@@ -56,7 +56,7 @@ Verify:
 ### 3. Buy Items (1 minute)
 ```
 Action: Go to Shop → Buy items
-Expected: Each costs 10 TF (water, fertilizer, antiBug)
+Expected: Each costs 150,000 TF per bundle (water, fertilizer, antiBug)
 Verify:
   ☐ Purchase successful
   ☐ Items appear in inventory
@@ -94,7 +94,7 @@ Expected: Need exactly 3 same rarity
 Verify:
   ☐ Select 3 Uncommon NFTs
   ☐ Shows output: Rare
-  ☐ Costs 50 TF
+  ☐ Costs 75,000 TF
   ☐ After fusion: Get Rare NFT
   
 Try: Select Legendary
@@ -288,13 +288,13 @@ netlify functions:serve
 ### Chest System
 - [ ] Buy chest → Uncommon guaranteed
 - [ ] Each chest gives different NFT
-- [ ] Costs 50 TF
+- [ ] Costs 250,000 TF
 - [ ] Works with mock DB
 
 ### Item System
-- [ ] Water: 10 TF bundle
-- [ ] Fertilizer: 10 TF bundle
-- [ ] Anti Bug: 10 TF bundle
+- [ ] Water: 150,000 TF bundle
+- [ ] Fertilizer: 150,000 TF bundle
+- [ ] Anti Bug: 150,000 TF bundle
 - [ ] Can buy multiple
 - [ ] Added to inventory
 
@@ -372,7 +372,7 @@ You'll know everything is working when:
 
 ✅ Can connect wallet
 ✅ Can buy chests (always Uncommon)
-✅ Can buy items (10 TF each)
+✅ Can buy items (150,000 TF per bundle)
 ✅ Can start farming (need all 3)
 ✅ Farming countdown shows 4 hours
 ✅ Can claim rewards (with fee)

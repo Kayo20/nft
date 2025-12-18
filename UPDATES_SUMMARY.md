@@ -47,7 +47,7 @@ All requested updates have been successfully implemented in the TreeFi project. 
 ---
 
 ## 5. ✅ Home Page (Landing) Updates
-- **Updated**: Total supply display to "100M TF"
+- **Updated**: Total supply display to "1B TF"
 - **Updated**: Network references to BNB Chain throughout
 - **Updated**: First 200 members reward: "2 free mints + OG role in Discord"
 - **Updated**: Season 0 duration to 10 days
@@ -78,7 +78,7 @@ All requested updates have been successfully implemented in the TreeFi project. 
 ## 8. ✅ Shop Updates
 - **Added**: NFT Chest section with:
   - Prominent chest card
-  - 10 TF cost display
+  - 150,000 TF cost display
   - Open chest dialog
   - Rarity drop rates
 - **Updated**: All item purchases to use TF tokens (not USDT)

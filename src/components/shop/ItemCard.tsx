@@ -54,7 +54,7 @@ export const ItemCard = ({ item, inventory, onPurchase, isPurchasing }: ItemCard
               <Coins className="w-4 h-4" />
               Cost
             </span>
-            <span className="text-lg font-bold text-[#0F5F3A]">{item.cost} TF</span>
+            <span className="text-lg font-bold text-[#0F5F3A]">{item.cost.toLocaleString()} TF</span>
           </div>
         </CardContent>
 

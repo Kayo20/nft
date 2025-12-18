@@ -42,7 +42,7 @@ export const ITEMS: Item[] = [
     name: 'Pure Water Bundle',
     description: '10 units, 4 hours duration',
     icon: '💧',
-    cost: 10, // Cost in TF per bundle
+    cost: 150000, // Cost in TF per bundle
     boost: 'Required for farming',
   },
   {
@@ -50,7 +50,7 @@ export const ITEMS: Item[] = [
     name: 'Fertilizer Bundle',
     description: '10 units, 4 hours duration',
     icon: '🌿',
-    cost: 10,
+    cost: 150000,
     boost: 'Required for farming',
   },
   {
@@ -58,13 +58,13 @@ export const ITEMS: Item[] = [
     name: 'Anti Bug Bundle',
     description: '10 units, 4 hours duration',
     icon: '🦟',
-    cost: 10,
+    cost: 150000,
     boost: 'Required for farming',
   },
 ];
 
 // Chest and item prices in TF
-export const CHEST_PRICE = 50; // TF tokens per chest
+export const CHEST_PRICE = 250000; // TF tokens per chest
 
 // Updated claim fee schedule for 10-day Season 0
 // Day 1: 50% fee, Day 10: 0% fee
@@ -88,9 +88,9 @@ export const ITEM_BUNDLE_SIZE = 10; // units per bundle
 // Fusion rules: 3x Uncommon→Rare, 3x Rare→Epic, 3x Epic→Legend
 // Legend cannot be fused further
 export const FUSION_COST: Record<Rarity, number> = {
-  Uncommon: 50, // TF equivalent on BNB Chain
-  Rare: 150,
-  Epic: 500,
+  Uncommon: 75000, // TF equivalent on BNB Chain
+  Rare: 150000,
+  Epic: 450000,
   Legendary: 0, // Cannot fuse legendary
 };
 
@@ -101,5 +101,9 @@ export const FUSION_RULES = {
   Legendary: { canFuse: false }, // Cannot fuse legendary
 };
 
-// Total supply: 100M TF
-export const TOTAL_SUPPLY = '100M TF';
+// Total supply: 1B TF
+export const TOTAL_SUPPLY = '1B TF';
+
+// Token contract and game wallet
+export const TF_TOKEN_CONTRACT = '0x349fd86a4a5c8d6778d1efeb1adea4337c214444';
+export const GAME_WALLET = '0x368273810a75f738eb4c4b6d00b8c37d998055b2';
