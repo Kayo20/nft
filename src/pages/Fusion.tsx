@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { fuseNFTs } from '@/lib/api';
-import { FUSION_COST, RARITY_ORDER, TF_TOKEN_CONTRACT, GAME_WALLET } from '@/lib/constants';
+import { FUSION_COST, RARITY_ORDER, TF_TOKEN_CONTRACT, GAME_WALLET, TRANSACTION_FEE_TF } from '@/lib/constants';
 import { transferERC20 } from '@/lib/web3';
 import { Zap, ArrowRight, Sparkles, AlertTriangle, Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -89,11 +89,12 @@ export default function Fusion() {
     setIsFusing(true);
 
     try {
-      // Transfer TF for fusion cost first
+      // Transfer TF for fusion cost + transaction fee
       if (!fusionCost) throw new Error('Invalid fusion cost');
       setTransferInProgress(true);
-      toast('Please confirm the TF transfer for fusion in your wallet...', { duration: 4000 });
-      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(fusionCost));
+      toast('Please confirm the TF transfer for fusion (including transaction fee) in your wallet...', { duration: 4000 });
+      const expected = fusionCost + (await import('@/lib/constants')).TRANSACTION_FEE_TF;
+      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(expected));
       const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
 
       setTransferInProgress(false);
@@ -208,7 +209,7 @@ export default function Fusion() {
               <Alert className="mt-6 border-[#E2B13C] dark:border-[#FCD34D] bg-[#E2B13C]/5 dark:bg-[#FCD34D]/5">
                 <Sparkles className="h-4 w-4 text-[#E2B13C] dark:text-[#FCD34D]" />
                 <AlertDescription className="text-gray-900 dark:text-white">
-                  Fusion Cost: <strong>{fusionCost.toLocaleString()} TF</strong> • Result: <strong>{resultRarity} Tree</strong>
+                  Fusion Cost: <strong>{fusionCost.toLocaleString()} TF</strong> (+ fee <strong>{TRANSACTION_FEE_TF} TF</strong>) • Result: <strong>{resultRarity} Tree</strong>
                 </AlertDescription>
               </Alert>
             )}

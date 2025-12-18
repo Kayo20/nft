@@ -76,9 +76,20 @@ export const handler: Handler = async (event: any) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "invalid JSON" }) };
     }
 
-    const { nftId } = body;
-    if (!nftId) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "nftId required" }) };
+    const { nftId, txHash } = body;
+    if (!nftId || !txHash) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "nftId and txHash required" }) };
+    }
+
+    // Verify transaction fee payment on-chain
+    try {
+      const { verifyERC20Transfer } = await import('./_utils/web3');
+      const { TF_TOKEN_CONTRACT, GAME_WALLET, TRANSACTION_FEE_TF } = await import('../../src/lib/constants');
+      const ok = await verifyERC20Transfer(txHash, TF_TOKEN_CONTRACT, GAME_WALLET, TRANSACTION_FEE_TF);
+      if (!ok) return { statusCode: 400, headers, body: JSON.stringify({ error: 'on-chain tx verification failed' }) };
+    } catch (err) {
+      console.error('tx verification error', err);
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
     }
 
     // Authenticate using session cookie

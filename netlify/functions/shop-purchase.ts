@@ -61,21 +61,22 @@ export const handler: Handler = async (event) => {
 
     const total = Number(item.price || 0) * Number(qty);
 
-    // If client provided an on-chain txHash, verify it corresponds to a TF transfer to our game wallet
-    if (txHash) {
-      try {
-        const verified = await verifyERC20Transfer(txHash, TF_TOKEN_CONTRACT, GAME_WALLET, total);
-        if (!verified) return { statusCode: 400, headers, body: JSON.stringify({ error: 'on-chain tx verification failed' }) };
-      } catch (err) {
-        console.error('tx verification error', err);
-        return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
-      }
+    // txHash is required and must correspond to item total + transaction fee
+    if (!txHash) return { statusCode: 400, headers, body: JSON.stringify({ error: 'txHash required' }) };
+    try {
+      const expected = total + (await import('../../src/lib/constants')).TRANSACTION_FEE_TF;
+      const verified = await verifyERC20Transfer(txHash, TF_TOKEN_CONTRACT, GAME_WALLET, expected);
+      if (!verified) return { statusCode: 400, headers, body: JSON.stringify({ error: 'on-chain tx verification failed' }) };
+    } catch (err) {
+      console.error('tx verification error', err);
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
     }
 
-    // Create transaction row (include on-chain tx hash if provided)
+    // Create transaction row (include on-chain tx hash and fee information)
+    const feeAmount = (await import('../../src/lib/constants')).TRANSACTION_FEE_TF;
     const { data: tx, error: txErr } = await supabase
       .from("transactions")
-      .insert([{ user_address: address, type: "purchase", amount: total, metadata: { itemId, qty, txHash } }])
+      .insert([{ user_address: address, type: "purchase", amount: total, fee: feeAmount, total_paid: total + feeAmount, metadata: { itemId, qty, txHash } }])
       .select()
       .single();
     if (txErr) throw txErr;

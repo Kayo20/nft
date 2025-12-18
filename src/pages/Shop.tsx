@@ -41,12 +41,13 @@ export default function Shop() {
       if (!item) throw new Error('Item not found');
 
       const total = Number(item.cost) * qty;
+      const expectedTotal = total + (await import('@/lib/constants')).TRANSACTION_FEE_TF;
 
-      // Prompt user to sign the TF transfer to the game wallet
+      // Prompt user to sign the TF transfer to the game wallet (item total + transaction fee)
       setTransferInProgress(true);
       setTransferAction('purchase');
-      toast('Please confirm the TF transfer in your wallet...', { duration: 4000 });
-      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(total));
+      toast('Please confirm the TF transfer (including transaction fee) in your wallet...', { duration: 4000 });
+      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(expectedTotal));
       const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
 
       setTransferInProgress(false);
@@ -77,11 +78,12 @@ export default function Shop() {
   const handleOpenChest = async () => {
     setOpeningChest(true);
     try {
-      // Transfer TF to game wallet for chest purchase
+      // Transfer TF to game wallet for chest purchase (price + tx fee)
       setTransferInProgress(true);
       setTransferAction('chest');
-      toast('Please confirm the TF transfer for chest in your wallet...', { duration: 4000 });
-      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(CHEST_PRICE));
+      toast('Please confirm the TF transfer for chest (including transaction fee) in your wallet...', { duration: 4000 });
+      const expected = CHEST_PRICE + (await import('@/lib/constants')).TRANSACTION_FEE_TF;
+      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(expected));
       const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
 
       setTransferInProgress(false);

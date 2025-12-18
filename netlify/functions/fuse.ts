@@ -113,16 +113,21 @@ export const handler: Handler = async (event) => {
     const totalPower = nfts.reduce((sum: number, x: any) => sum + (Number(x.power) || 0), 0);
     const newPower = Math.max(1, Math.floor(totalPower * 1.2)); // 20% boost for fused NFT
 
-    // If txHash provided, verify it corresponds to the expected fusion cost transfer
+    // txHash is required and we require an on-chain transfer for fusion cost + transaction fee
     const expectedCost = FUSION_COST[currentRarity as any] || 0;
-    if (txHash && supabase) {
+    if (!txHash) return { statusCode: 400, headers, body: JSON.stringify({ error: 'txHash required' }) };
+
+    if (supabase) {
       try {
-        const ok = await verifyERC20Transfer(txHash, TF_TOKEN_CONTRACT, GAME_WALLET, expectedCost);
+        const expected = expectedCost + (await import('../../src/lib/constants')).TRANSACTION_FEE_TF;
+        const ok = await verifyERC20Transfer(txHash, TF_TOKEN_CONTRACT, GAME_WALLET, expected);
         if (!ok) return { statusCode: 400, headers, body: JSON.stringify({ error: 'on-chain tx verification failed' }) };
       } catch (err) {
         console.error('tx verification error', err);
         return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
       }
+    } else {
+      // in mock mode, accept any txHash
     }
 
     // Create new NFT (persist or mock)
@@ -156,9 +161,10 @@ export const handler: Handler = async (event) => {
     const { error: burnErr } = await supabase.from("nfts").update({ status: "burned" }).in("id", nftIds);
     if (burnErr) throw burnErr;
 
-    // Log fusion history
+    // Log fusion history (include expected cost and fee)
+    const feeAmount = (await import('../../src/lib/constants')).TRANSACTION_FEE_TF;
     await supabase.from("fusion_history").insert([
-      { user_address: address, input_nft_ids: nftIds, result_nft_id: createdData.id, cost: 0, tx_hash: txHash },
+      { user_address: address, input_nft_ids: nftIds, result_nft_id: createdData.id, cost: expectedCost, fee: feeAmount, total_paid: expectedCost + feeAmount, tx_hash: txHash },
     ]);
 
     return { statusCode: 200, headers, body: JSON.stringify({ nft: createdData }) };

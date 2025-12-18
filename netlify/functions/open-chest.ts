@@ -69,15 +69,15 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify({ nft: created }) };
     }
 
-    // If an on-chain txHash is provided, verify it corresponds to the chest price transfer
-    if (txHash) {
-      try {
-        const verified = await verifyERC20Transfer(txHash, TF_TOKEN_CONTRACT, GAME_WALLET, CHEST_PRICE);
-        if (!verified) return { statusCode: 400, headers, body: JSON.stringify({ error: 'on-chain tx verification failed' }) };
-      } catch (err) {
-        console.error('tx verification error', err);
-        return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
-      }
+    // Require an on-chain txHash and verify it corresponds to chest price + transaction fee
+    if (!txHash) return { statusCode: 400, headers, body: JSON.stringify({ error: 'txHash required' }) };
+    try {
+      const expected = CHEST_PRICE + (await import('../../src/lib/constants')).TRANSACTION_FEE_TF;
+      const verified = await verifyERC20Transfer(txHash, TF_TOKEN_CONTRACT, GAME_WALLET, expected);
+      if (!verified) return { statusCode: 400, headers, body: JSON.stringify({ error: 'on-chain tx verification failed' }) };
+    } catch (err) {
+      console.error('tx verification error', err);
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
     }
 
     const { data: created, error: insertErr } = await supabase
@@ -98,6 +98,15 @@ export const handler: Handler = async (event) => {
       .single();
 
     if (insertErr) throw insertErr;
+
+    // Log chest purchase transaction
+    try {
+      const fee = (await import('../../src/lib/constants')).TRANSACTION_FEE_TF;
+      await supabase.from('transactions').insert([{ user_address: address, type: 'chest', amount: CHEST_PRICE, fee, total_paid: CHEST_PRICE + fee, metadata: { type, txHash } }]);
+    } catch (err) {
+      console.warn('Failed to log chest transaction', err);
+    }
+
     return { statusCode: 200, headers, body: JSON.stringify({ nft: created }) };
   } catch (err: any) {
     console.error("open-chest error", err);

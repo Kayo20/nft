@@ -37,10 +37,39 @@ export default function Inventory() {
     toast.info(`Slot ${slotIndex + 1} clicked`);
   };
 
-  const handleAddItems = () => {
-    toast.success('Items added to all trees!', {
-      description: 'Your trees will produce for the next 4 hours',
-    });
+  const handleAddItems = async () => {
+    try {
+      // Prepare items and fee
+      const itemIds: ('water' | 'fertilizer' | 'antiBug')[] = ['water','fertilizer','antiBug'];
+      const fee = (await import('@/lib/constants')).TRANSACTION_FEE_TF;
+
+      toast('Please confirm the transaction in your wallet to apply items...', { duration: 4000 });
+      // Ask user to sign the fee transfer once
+      const { transferERC20 } = await import('@/lib/web3');
+      const { TF_TOKEN_CONTRACT, GAME_WALLET } = await import('@/lib/constants');
+      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(fee));
+      const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
+
+      if (!txHash) throw new Error('Transaction failed');
+
+      // Apply items to all owned NFTs (this will call backend which verifies the txHash)
+      const { startFarming } = await import('@/lib/api');
+      const targets = nfts.map(n => n.id);
+      for (const nftId of targets) {
+        try {
+          await startFarming(nftId, itemIds, txHash);
+        } catch (err) {
+          console.error('startFarming failed for nft', nftId, err);
+        }
+      }
+
+      toast.success('Items applied to your trees!', {
+        description: 'Items active for 4 hours',
+      });
+    } catch (err) {
+      console.error('Add items error', err);
+      toast.error('Failed to apply items. Make sure to confirm the wallet transaction.');
+    }
   };
 
   // Get current land data - use real data from backend if available

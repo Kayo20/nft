@@ -69,13 +69,13 @@ export async function purchaseItem(itemId: string, qty: number, txHash?: string)
 }
 
 // TreeFi Spec: Farming and rewards
-export async function startFarming(nftId: number, itemIds: ('water' | 'fertilizer' | 'antiBug')[]) {
+export async function startFarming(nftId: number, itemIds: ('water' | 'fertilizer' | 'antiBug')[], txHash?: string) {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/.netlify/functions/start-farming`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ nftId, itemIds }),
+    body: JSON.stringify({ nftId, itemIds, txHash }),
   });
   if (!res.ok) {
     const txt = await res.text();
@@ -84,13 +84,13 @@ export async function startFarming(nftId: number, itemIds: ('water' | 'fertilize
   return res.json();
 }
 
-export async function claimRewards(nftId: number) {
+export async function claimRewards(nftId: number, txHash?: string) {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/.netlify/functions/claim`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ nftId }),
+    body: JSON.stringify({ nftId, txHash }),
   });
   if (!res.ok) {
     const txt = await res.text();

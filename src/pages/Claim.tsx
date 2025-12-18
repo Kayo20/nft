@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useWallet } from '@/hooks/useWallet';
+import { useNFTs } from '@/hooks/useNFTs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -25,21 +26,36 @@ export default function Claim() {
     setNetAmount(net);
   }, [claimableAmount, feePercentage]);
 
+  const { nfts } = useNFTs(wallet.address || '');
+
   const handleClaim = async () => {
     setShowConfirmDialog(false);
     setIsClaiming(true);
 
     try {
-      // Simulate claim
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      if (!nfts || nfts.length === 0) throw new Error('No NFT found to claim from');
+      const nftId = nfts[0].id; // pick first NFT for claim (UI can be expanded later)
+
+      // Prompt user to sign wallet tx for transaction fee
+      const { transferERC20 } = await import('@/lib/web3');
+      const { TF_TOKEN_CONTRACT, GAME_WALLET, TRANSACTION_FEE_TF } = await import('@/lib/constants');
+      toast('Please sign the transaction fee in your wallet to claim rewards...', { duration: 4000 });
+      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(TRANSACTION_FEE_TF));
+      const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
+      if (!txHash) throw new Error('Transaction failed');
+
+      // Call backend to complete claim (requires txHash verification)
+      const { claimRewards } = await import('@/lib/api');
+      const result = await claimRewards(nftId, txHash);
+
+      // Update UI based on response
       toast.success('Claim successful!', {
-        description: `You received ${netAmount.toFixed(2)} TF tokens`,
+        description: `You received ${result.netRewards ?? netAmount} TF tokens`,
       });
-      
-      setTfBalance(prev => prev + netAmount);
+      setTfBalance(prev => prev + (result.netRewards || netAmount));
       setClaimableAmount(0);
     } catch (error) {
+      console.error('Claim error', error);
       toast.error('Transaction failed', {
         description: 'An error occurred during claim',
       });

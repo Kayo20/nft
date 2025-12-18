@@ -35,9 +35,9 @@ export const handler: Handler = async (event: any) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "invalid JSON" }) };
     }
 
-    const { nftId, itemIds } = body;
-    if (!nftId || !itemIds || !Array.isArray(itemIds)) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "nftId and itemIds array required" }) };
+    const { nftId, itemIds, txHash } = body;
+    if (!nftId || !itemIds || !Array.isArray(itemIds) || !txHash) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "nftId, itemIds array and txHash required" }) };
     }
 
     // TreeFi Spec: Must have all 3 items (water, fertilizer, antiBug)
@@ -61,8 +61,17 @@ export const handler: Handler = async (event: any) => {
     }
     const address = session.address;
 
+    // Verify the on-chain transaction corresponds to the fixed transaction fee
+    try {
+      const ok = await (await import('./_utils/web3')).verifyERC20Transfer(txHash, (await import('../../src/lib/constants')).TF_TOKEN_CONTRACT, (await import('../../src/lib/constants')).GAME_WALLET, (await import('../../src/lib/constants')).TRANSACTION_FEE_TF);
+      if (!ok) return { statusCode: 400, headers, body: JSON.stringify({ error: 'on-chain tx verification failed' }) };
+    } catch (err) {
+      console.error('tx verification error', err);
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
+    }
+
     if (!supabase) {
-      // Mock implementation
+      // Mock implementation (accept any txHash in mock mode)
       const currentTime = Date.now();
       const expiresAt = currentTime + ITEM_CONSUMPTION_INTERVAL; // 4 hours
       
@@ -81,11 +90,11 @@ export const handler: Handler = async (event: any) => {
           activeItems,
           durationMs: ITEM_CONSUMPTION_INTERVAL,
           durationHours: 4,
+          txHash,
           message: "Farming started (mock)",
         }),
       };
     }
-
     // Get user ID
     const { data: user } = await supabase
       .from("users")

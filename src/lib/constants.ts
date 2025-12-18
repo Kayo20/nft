@@ -101,6 +101,11 @@ export const FUSION_RULES = {
   Legendary: { canFuse: false }, // Cannot fuse legendary
 };
 
+// Transaction fee: fixed cost per in-game wallet transaction
+// NOTE: This represents the fee in TF token units (same units as other TF constants). The USD equivalent is $0.10.
+export const TRANSACTION_FEE_TF = 10000; // small fixed fee (adjust as needed)
+export const TRANSACTION_FEE_USD = 0.10;
+
 // Total supply: 1B TF
 export const TOTAL_SUPPLY = '1B TF';
 
