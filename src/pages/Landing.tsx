@@ -29,6 +29,8 @@ import FourmemeLogo from '@/assets/fourmeme-logo.svg';
 export default function Landing() {
   const navigate = useNavigate();
 
+  const PLACEHOLDER = new URL('../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
+
   // Load local NFT assets (eagerly import as URLs) and group by rarity folder
   const localNftImages: Record<string, string[]> = (() => {
     // Updated to use Vite's new glob query format (replace deprecated `as: 'url'`)
@@ -43,6 +45,8 @@ export default function Landing() {
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(url);
     });
+    const placeholder = new URL('../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
+    console.log('Local NFT images grouped by rarity:', grouped);
     return grouped;
   })();
 
@@ -95,7 +99,7 @@ export default function Landing() {
       // Initialize using local assets as the primary source
       const initial = rarities.map(r => {
         const urls = localNftImages[r.name] || [];
-        const url = urls.length > 0 ? urls[Math.floor(Math.random() * urls.length)] : '';
+        const url = urls.length > 0 ? urls[Math.floor(Math.random() * urls.length)] : PLACEHOLDER;
         return {
           id: Math.floor(Math.random() * 100000),
           rarity: r.name,
@@ -109,7 +113,10 @@ export default function Landing() {
           lastBugTreated: Date.now(),
         };
       });
-      if (mounted) setRarityTrees(initial);
+      if (mounted) {
+        setRarityTrees(initial);
+        console.log('Initial rarityTrees set on Landing:', initial);
+      }
 
       try {
         const res: any = await listNftImages();
@@ -125,7 +132,10 @@ export default function Landing() {
           }
           return entry;
         });
-        if (mounted) setRarityTrees(updated);
+        if (mounted) {
+          setRarityTrees(updated);
+          console.log('Updated rarityTrees after Supabase fetch:', updated);
+        }
       } catch (e) {
         console.error('Failed to load NFT images:', e);
         // Keep initial local images (they were already set)
