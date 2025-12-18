@@ -21,6 +21,16 @@ export const TreeCard = ({ tree, onClick, selected }: TreeCardProps) => {
   const needsFertilizer = now - tree.lastFertilized > ITEM_CONSUMPTION_INTERVAL;
   const needsBugTreatment = now - tree.lastBugTreated > ITEM_CONSUMPTION_INTERVAL;
 
+  // Defensive image source: use placeholder when tree.image is falsy or blank
+  const imgSrc = (tree.image && String(tree.image).trim()) ? String(tree.image) : PLACEHOLDER;
+  if (!tree.image || !String(tree.image).trim()) {
+    // Helpful debug output when an image is missing
+    // This will appear in the browser console for easier investigation
+    // (We keep it lightweight so it doesn't spam logs)
+    // eslint-disable-next-line no-console
+    console.warn(`TreeCard: missing image for tree #${tree.id}, using placeholder`);
+  }
+
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -4 }}
@@ -61,8 +71,9 @@ export const TreeCard = ({ tree, onClick, selected }: TreeCardProps) => {
           {/* Tree Image */}
           <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-[#0F5F3A]/10 to-[#166C47]/10">
             <img
-              src={tree.image}
+              src={imgSrc}
               alt={`Tree ${tree.id}`}
+              data-original-src={tree.image || ''}
               className="w-full h-full object-contain"
               style={{ display: 'block', background: 'none' }}
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}

@@ -35,10 +35,12 @@ export default function Landing() {
   const localNftImages: Record<string, string[]> = (() => {
     // Updated to use Vite's new glob query format (replace deprecated `as: 'url'`)
     // `query: '?url'` returns an object with `{ default: '<url>' }` when combined with `import: 'default'`
-    const allImports = import.meta.glob('/src/assets/*/*.png', { query: '?url', import: 'default', eager: true }) as Record<string, { default: string }>;
+    const allImports = import.meta.glob('/src/assets/*/*.png', { query: '?url', import: 'default', eager: true }) as Record<string, any>;
     const grouped: Record<string, string[]> = {};
     Object.entries(allImports).forEach(([path, mod]) => {
-      const url = (mod && (mod as any).default) || '';
+      // Handle both shapes: direct string (eager url) or module with a default export
+      const url = typeof mod === 'string' ? mod : ((mod && (mod as any).default) || '');
+      if (!url) return; // skip empty/invalid results
       const parts = path.split('/');
       const folder = parts[parts.length - 2] || '';
       const key = folder.charAt(0).toUpperCase() + folder.slice(1);
