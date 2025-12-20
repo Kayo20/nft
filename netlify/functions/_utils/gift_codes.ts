@@ -35,13 +35,20 @@ const IN_MEMORY: Record<string, GiftRecord> = (() => {
 })();
 
 export async function getCodeRecord(code: string): Promise<GiftRecord | null> {
-  const normalized = code.toUpperCase();
+  const trimmed = (code || '').trim();
+  const normalized = trimmed.toUpperCase();
   if (!supabase && REQUIRE_SUPABASE) {
     throw new Error('Gift codes require Supabase in production');
   }
   if (supabase) {
-    const { data, error } = await supabase.from('gift_codes').select('*').eq('code', normalized).limit(1).single();
-    if (error) return null;
+    // Try exact (case-sensitive) uppercase match first for speed
+    let query = await supabase.from('gift_codes').select('*').eq('code', normalized).limit(1).single();
+    if (!(query && query.data) && !query.error) {
+      // Fallback to case-insensitive match (handles mixed-case or legacy entries)
+      query = await supabase.from('gift_codes').select('*').ilike('code', trimmed).limit(1).single();
+    }
+    const { data, error } = query || { data: null, error: null };
+    if (error || !data) return null;
     return { id: data.id, code: data.code, claimed: data.claimed, claimedBy: data.claimed_by, claimedAt: data.claimed_at } as GiftRecord;
   }
   return IN_MEMORY[normalized] || null;
@@ -53,11 +60,17 @@ export async function claimCode(code: string, address: string, metadata: any = n
     throw new Error('Gift codes require Supabase in production');
   }
   if (supabase) {
-    const { data: existing } = await supabase.from('gift_codes').select('*').eq('code', normalized).limit(1).single();
+    // Find existing record with same tolerant lookup as getCodeRecord
+    let query = await supabase.from('gift_codes').select('*').eq('code', normalized).limit(1).single();
+    if (!(query && query.data) && !query.error) {
+      query = await supabase.from('gift_codes').select('*').ilike('code', (code || '').trim()).limit(1).single();
+    }
+    const { data: existing } = query || { data: null };
     if (!existing) return { success: false, message: 'Invalid code' };
     if (existing.claimed) return { success: false, message: 'Already claimed' };
 
-    const { error: updErr } = await supabase.from('gift_codes').update({ claimed: true, claimed_by: address, claimed_at: new Date().toISOString() }).eq('code', normalized);
+    // Use id for update to avoid case/collation mismatches
+    const { error: updErr } = await supabase.from('gift_codes').update({ claimed: true, claimed_by: address, claimed_at: new Date().toISOString() }).eq('id', existing.id);
     if (updErr) return { success: false, message: 'Failed to claim code' };
 
     await supabase.from('gift_code_claims').insert([{ gift_code_id: existing.id, claimer: address, metadata }]);
