@@ -34,34 +34,44 @@ export const handler: Handler = async (event) => {
     try {
       body = JSON.parse(event.body);
     } catch (e) {
+      console.error('redeem-gift-code: invalid JSON', event.body);
       return { statusCode: 400, headers, body: JSON.stringify({ error: "invalid JSON" }) };
     }
 
     const { code } = body;
+    console.log('redeem-gift-code: incoming code:', code);
     if (!code || typeof code !== 'string') {
+      console.warn('redeem-gift-code: missing code');
       return { statusCode: 400, headers, body: JSON.stringify({ error: "gift code required" }) };
     }
 
     // Authenticate using session cookie
     const session = verifySession(event.headers.cookie);
     if (!session) {
+      console.warn('redeem-gift-code: not authenticated');
       return { statusCode: 401, headers, body: JSON.stringify({ error: "not authenticated" }) };
     }
     const address = session.address;
+    console.log(`redeem-gift-code: session address=${address}`);
 
     // Check if code exists and is valid
-    const codeRecord = getCodeRecord(code);
+    const codeRecord = await getCodeRecord(code);
+    console.log('redeem-gift-code: codeRecord=', codeRecord);
     if (!codeRecord) {
+      console.warn('redeem-gift-code: invalid code');
       return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid gift code" }) };
     }
 
     if (codeRecord.claimed) {
+      console.warn('redeem-gift-code: already claimed');
       return { statusCode: 400, headers, body: JSON.stringify({ error: "This gift code has already been claimed" }) };
     }
 
     // Mark code as claimed using shared util
-    const claimRes = claimCode(code, address);
+    const claimRes = await claimCode(code, address);
+    console.log('redeem-gift-code: claimRes=', claimRes);
     if (!claimRes.success) {
+      console.warn('redeem-gift-code: claim failed', claimRes.message);
       return { statusCode: 400, headers, body: JSON.stringify({ error: claimRes.message }) };
     }
 

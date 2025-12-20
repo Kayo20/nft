@@ -107,11 +107,18 @@ export async function redeemGiftCode(code: string) {
     credentials: 'include',
     body: JSON.stringify({ code }),
   });
+
+  const txt = await res.text();
+  let parsed: any = null;
+  try { parsed = txt ? JSON.parse(txt) : null; } catch (e) { /* noop */ }
+
   if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Gift code redemption failed: ${txt}`);
+    const message = parsed?.error || txt || 'Gift code redemption failed';
+    // Return structured result so the UI can show the server message
+    return { success: false, message };
   }
-  return res.json();
+
+  return parsed || { success: false, message: 'Invalid response from server' };
 }
 
 export async function getSeasonInfo() {

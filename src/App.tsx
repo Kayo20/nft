@@ -21,35 +21,39 @@ import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <WalletProvider>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <div className="min-h-screen bg-gradient-to-br from-pink-50 via-gray-50 to-pink-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-              <Navbar />
-              <main className="pb-20 md:pb-0">
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/wallet-setup" element={<WalletSetup />} />
-                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                  <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
-                  <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
-                  <Route path="/fusion" element={<ProtectedRoute><Fusion /></ProtectedRoute>} />
-                  <Route path="/claim" element={<ProtectedRoute><Claim /></ProtectedRoute>} />
-                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <Footer />
-              <BottomNav />
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
-      </WalletProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <WalletProvider>
+          <TooltipProvider>
+            <Toaster />
+            <BrowserRouter>
+              <div className="min-h-screen bg-gradient-to-br from-pink-50 via-gray-50 to-pink-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+                <Navbar />
+                <main className="pb-20 md:pb-0">
+                  <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/wallet-setup" element={<WalletSetup />} />
+                    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                    <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+                    <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
+                    <Route path="/fusion" element={<ProtectedRoute><Fusion /></ProtectedRoute>} />
+                    <Route path="/claim" element={<ProtectedRoute><Claim /></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+                <Footer />
+                <BottomNav />
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </WalletProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   </QueryClientProvider>
 );
 
