@@ -53,7 +53,7 @@ export const handler: Handler = async (event) => {
     }
     const address = session.address;
     console.log(`redeem-gift-code: session address=${address}`);
-
+    console.log('redeem-gift-code: SUPABASE_URL', process.env.SUPABASE_URL ? process.env.SUPABASE_URL.replace(/https?:\/\//, '') : 'none');
     // Check if code exists and is valid
     const codeRecord = await getCodeRecord(code);
     console.log('redeem-gift-code: codeRecord=', codeRecord);

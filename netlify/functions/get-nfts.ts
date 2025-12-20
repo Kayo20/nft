@@ -6,8 +6,10 @@ import { getNftsByOwner as mockGetNftsByOwner } from "./_utils/mock_db";
 let supabase: any;
 try {
   supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  console.log('get-nfts: SUPABASE_URL', process.env.SUPABASE_URL ? process.env.SUPABASE_URL.replace(/https?:\/\//, '') : 'none');
 } catch (e) {
   console.warn('Supabase client not configured, using mock DB for get-nfts');
+  console.warn('get-nfts: SUPABASE_URL env:', process.env.SUPABASE_URL ? process.env.SUPABASE_URL.replace(/https?:\/\//, '') : 'none');
 }
 
 export const handler: Handler = async (event) => {
