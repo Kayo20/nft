@@ -81,7 +81,7 @@ export const handler: Handler = async (event) => {
 
     if (!supabase) {
       const created = mockInsertNft({ owner_address: address, rarity, power, metadata: { claimed_via_gift_code: code } });
-      return { statusCode: 200, headers, body: JSON.stringify({ nft: created, message: "Gift code claimed! You received a free Uncommon tree." }) };
+      return { statusCode: 200, headers, body: JSON.stringify({ success: true, tree: created, message: "Gift code claimed! You received a free Uncommon tree." }) };
     }
 
     const { data: created, error: insertErr } = await supabase
@@ -107,10 +107,7 @@ export const handler: Handler = async (event) => {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        nft: created,
-        message: "Gift code claimed! You received a free Uncommon tree.",
-      }),
+      body: JSON.stringify({ success: true, tree: created, message: "Gift code claimed! You received a free Uncommon tree." }),
     };
   } catch (error) {
     console.error("Error:", error);
