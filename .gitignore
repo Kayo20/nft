@@ -25,3 +25,8 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
+
+# Local generated gift code files
+scripts/generated-gift-codes.csv
+scripts/generated-gift-codes.json
+scripts/generated-gift-codes.txt

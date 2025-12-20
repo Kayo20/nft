@@ -9,6 +9,10 @@
     "test": "vitest",
     "build": "vite build",
     "lint": "eslint --quiet ./src",
+    "list-gift-codes": "node scripts/list-gift-codes.js",
+    "seed-gift-codes": "node scripts/seed-gift-codes.js",
+    "generate-gift-codes": "node scripts/generate-gift-codes.js",
+    "import-gift-codes": "node scripts/import-gift-codes.js",
     "preview": "vite preview"
   },
   "dependencies": {
