@@ -13,6 +13,11 @@
     "seed-gift-codes": "node scripts/seed-gift-codes.js",
     "generate-gift-codes": "node scripts/generate-gift-codes.js",
     "import-gift-codes": "node scripts/import-gift-codes.js",
+    "normalize-gift-codes-report": "node scripts/backfill-normalize-gift-codes.js",
+    "normalize-gift-codes-fix": "node scripts/backfill-normalize-gift-codes.js --fix",
+    "check-gift-code": "node scripts/check-gift-code.js",
+    "debug-redeem": "node scripts/debug-redeem.js",
+    "list-users": "node scripts/list-users.js",
     "preview": "vite preview"
   },
   "dependencies": {

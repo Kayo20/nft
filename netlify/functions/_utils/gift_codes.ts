@@ -41,12 +41,17 @@ export async function getCodeRecord(code: string): Promise<GiftRecord | null> {
     throw new Error('Gift codes require Supabase in production');
   }
   if (supabase) {
-    // Try exact (case-sensitive) uppercase match first for speed
-    let query = await supabase.from('gift_codes').select('*').eq('code', normalized).limit(1).single();
-    if (!(query && query.data) && !query.error) {
-      // Fallback to case-insensitive match (handles mixed-case or legacy entries)
+    // Prefer normalized_code (added by migration) for exact lookups
+    let query = await supabase.from('gift_codes').select('*').eq('normalized_code', normalized).limit(1).single();
+
+    // Fallbacks for legacy rows: exact uppercased code, then case-insensitive match on trimmed
+    if (!(query && query.data) && !query?.error) {
+      query = await supabase.from('gift_codes').select('*').eq('code', normalized).limit(1).single();
+    }
+    if (!(query && query.data) && !query?.error) {
       query = await supabase.from('gift_codes').select('*').ilike('code', trimmed).limit(1).single();
     }
+
     const { data, error } = query || { data: null, error: null };
     if (error || !data) return null;
     return { id: data.id, code: data.code, claimed: data.claimed, claimedBy: data.claimed_by, claimedAt: data.claimed_at } as GiftRecord;
@@ -66,14 +71,19 @@ export async function claimCode(code: string, address: string, metadata: any = n
       query = await supabase.from('gift_codes').select('*').ilike('code', (code || '').trim()).limit(1).single();
     }
     const { data: existing } = query || { data: null };
-    if (!existing) return { success: false, message: 'Invalid code' };
-    if (existing.claimed) return { success: false, message: 'Already claimed' };
+    if (!existing) return { success: false, message: 'Invalid gift code' };
+    if (existing.claimed) return { success: false, message: 'This gift code has already been claimed' };
 
     // Use id for update to avoid case/collation mismatches
     const { error: updErr } = await supabase.from('gift_codes').update({ claimed: true, claimed_by: address, claimed_at: new Date().toISOString() }).eq('id', existing.id);
     if (updErr) return { success: false, message: 'Failed to claim code' };
 
-    await supabase.from('gift_code_claims').insert([{ gift_code_id: existing.id, claimer: address, metadata }]);
+    try {
+      await supabase.from('gift_code_claims').insert([{ gift_code_id: existing.id, claimer: address, metadata }]);
+    } catch (e) {
+      console.warn('Failed to log claim in gift_code_claims (table missing or error):', e?.message || e);
+    }
+
     return { success: true, message: 'Code claimed' };
   }
 

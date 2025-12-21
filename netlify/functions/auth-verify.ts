@@ -211,13 +211,19 @@ export const handler: Handler = async (event) => {
     // Upsert user to Supabase
     try {
       if (supabase) {
+        console.log('auth-verify: SUPABASE_URL', process.env.SUPABASE_URL ? process.env.SUPABASE_URL.replace(/https?:\/\//, '') : 'none');
         const profile = { wallet_address: addr, last_seen: new Date().toISOString() };
-        await supabase.from("users").upsert({ wallet_address: addr, profile }, { onConflict: ["wallet_address"] }).catch(() => {});
+        const upsertRes = await supabase.from("users").upsert({ wallet_address: addr, profile }, { onConflict: ["wallet_address"] });
+        console.log('auth-verify: upsert result', { status: upsertRes.status, error: upsertRes.error, data: (upsertRes.data && upsertRes.data.length) ? upsertRes.data[0] : null });
+
         // Clear nonce from Supabase
-        await supabase.from("nonces").delete().eq("address", addr).catch(() => {});
+        const delRes = await supabase.from("nonces").delete().eq("address", addr);
+        console.log('auth-verify: cleared nonce result', { status: delRes.status, error: delRes.error });
+      } else {
+        console.warn('auth-verify: supabase client not configured; skipping user upsert');
       }
     } catch (e) {
-      console.warn('Failed to update Supabase:', e);
+      console.warn('Failed to update Supabase:', e?.message || e);
     }
     
     // Clear from in-memory store
