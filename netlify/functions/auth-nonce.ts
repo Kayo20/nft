@@ -74,13 +74,25 @@ export const handler: Handler = async (event) => {
     setNonce(addr, nonce, expiresAt);
 
     // Try to persist to Supabase
+    let persistedToDb = false;
     try {
       if (supabase) {
         const expiresAtIso = new Date(expiresAt).toISOString();
-        await supabase.from('nonces').upsert({ address: addr, nonce, expires_at: expiresAtIso }, { onConflict: ['address'] }).catch(() => {});
+        const up = await supabase.from('nonces').upsert({ address: addr, nonce, expires_at: expiresAtIso }, { onConflict: ['address'] }).catch(() => ({ error: true }));
+        if (up && !up.error) persistedToDb = true;
       }
     } catch (e) {
       console.warn('Failed to persist nonce to Supabase, using memory store:', e);
+    }
+
+    // TEMP LOG: show when nonces are created (enable in dev/testing or set DEBUG_NONCES=true)
+    try {
+      const debugNonces = process.env.DEBUG_NONCES === 'true' || process.env.NODE_ENV !== 'production';
+      if (debugNonces) {
+        console.log('auth-nonce: created nonce', { address: addr, nonce, expiresAt: new Date(expiresAt).toISOString(), persistedToDb });
+      }
+    } catch (e) {
+      // ignore logging errors
     }
 
     // Also set a short-lived HttpOnly cookie with the nonce so verify can read it
