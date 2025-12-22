@@ -20,7 +20,7 @@ export async function fetchManifestImages(): Promise<ManifestImage[]> {
   }
 
   // Prefer IPFS root when configured at build time
-  const IPFS_ROOT = (import.meta.env.VITE_IPFS_IMAGES_ROOT as string) || '';
+  const IPFS_ROOT = (process.env.VITE_IPFS_IMAGES_ROOT as string) || '';
   const rarities = ['uncommon', 'rare', 'epic', 'legendary'];
   const images: ManifestImage[] = [];
 
@@ -43,8 +43,8 @@ export async function fetchManifestImages(): Promise<ManifestImage[]> {
   }
 
   // Fallback to Supabase manifest.json
-  const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string) || '';
-  const BUCKET = (import.meta.env.VITE_NFT_IMAGES_BUCKET as string) || 'nft-images';
+  const SUPABASE_URL = (process.env.VITE_SUPABASE_URL as string) || '';
+  const BUCKET = (process.env.VITE_NFT_IMAGES_BUCKET as string) || 'nft-images';
   if (!SUPABASE_URL) return images;
 
   const manifestUrl = `${SUPABASE_URL.replace(/\/$/, '')}/storage/v1/object/public/${BUCKET}/manifest.json`;

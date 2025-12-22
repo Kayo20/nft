@@ -2,7 +2,7 @@ const getBaseUrl = () => {
   if (typeof window === 'undefined') return '';
   
   // Allow explicit override via env var
-  const envUrl = typeof import.meta !== 'undefined' ? (import.meta.env?.VITE_NETLIFY_FUNCTIONS_URL as string) : undefined;
+  const envUrl = process.env.VITE_NETLIFY_FUNCTIONS_URL || undefined;
   if (envUrl) {
     console.log('Using VITE_NETLIFY_FUNCTIONS_URL:', envUrl);
     return envUrl;
