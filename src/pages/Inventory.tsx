@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
 import { useNFTs } from '@/hooks/useNFTs';
 import { useItems } from '@/hooks/useItems';
-import { useUserLands, useLandDetails } from '@/hooks/useUserLands';
+import { useUserLands, useLandDetails, useUpdateLandSlot } from '@/hooks/useUserLands';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LandSlots } from '@/components/dashboard/LandSlots';
@@ -26,15 +26,36 @@ export default function Inventory() {
   const { inventory } = useItems(demoAddress);
   
   // Fetch lands from backend
-  const { lands = [], isLoading: landsLoading } = useUserLands(demoAddress);
+  const { lands = [], isLoading: landsLoading, refetch: refetchLands } = useUserLands(demoAddress);
   const [currentLand, setCurrentLand] = useState(0);
   
   // Fetch details for current land
   const currentLandId = lands.length > 0 ? lands[currentLand]?.id : null;
-  const { landData } = useLandDetails(currentLandId, landsLoading || lands.length === 0);
+  const { landData, refetch: refetchLandDetails } = useLandDetails(currentLandId, landsLoading || lands.length === 0);
 
-  const handleSlotClick = (slotIndex: number) => {
-    toast.info(`Slot ${slotIndex + 1} clicked`);
+  const { mutateAsync: updateSlot } = useUpdateLandSlot(currentLandId);
+
+  const handleSlotClick = async (slotIndex: number) => {
+    try {
+      // If slot is occupied, clicking removes the tree
+      const currentSlots = (landData && landData.slotData) || [];
+      const slot = currentSlots[slotIndex];
+      if (slot && slot.nftId !== null) {
+        toast('Removing tree from slot...', { duration: 2000 });
+        await updateSlot({ slotIndex, nftId: null });
+        toast.success('Tree removed from slot');
+        // refresh
+        refetchLandDetails();
+        refetchLands();
+        return;
+      }
+
+      // Otherwise, treat as add tree
+      await handleAddTree(slotIndex);
+    } catch (err) {
+      console.error('Slot click failed', err);
+      toast.error('Failed to update slot');
+    }
   };
 
   const handleAddItems = async () => {
@@ -76,17 +97,37 @@ export default function Inventory() {
   const currentLandData = landData || (lands.length > 0 ? lands[currentLand] : null);
   const landSlotCount = currentLandData?.slots || 9; // Default to 9 if not available
   
-  // Initialize landSlots from backend slot data, or empty if no data
-  const [landSlots] = useState(() => {
-    if (currentLandData?.slot_data && Array.isArray(currentLandData.slot_data)) {
-      return currentLandData.slot_data;
-    }
-    return Array(landSlotCount).fill(null);
-  });
+  // Derive landSlots from backend slot data so updates reflect immediately
+  const landSlots = (currentLandData && currentLandData.slotData) || Array(landSlotCount).fill(null);
 
-  const handleAddTree = (slotIndex: number) => {
-    toast.info(`Adding tree to slot ${slotIndex + 1}...`);
-    // In a real implementation, this would call the backend to update the slot
+  const handleAddTree = async (slotIndex: number) => {
+    try {
+      toast('Adding tree to slot...', { duration: 2000 });
+
+      if (!currentLandId) {
+        toast.error('No land selected');
+        return;
+      }
+
+      // Find an NFT we own that is not already planted
+      const plantedIds = landSlots.filter((s: any) => s && s.nftId !== null).map((s: any) => s.nftId);
+      const nftToPlant = nfts.find(n => !plantedIds.includes(n.id));
+
+      if (!nftToPlant) {
+        toast.error('No available NFTs to plant');
+        return;
+      }
+
+      await updateSlot({ slotIndex, nftId: nftToPlant.id });
+      toast.success(`Planted Tree ${nftToPlant.id} in slot ${slotIndex + 1}`);
+
+      // Refresh backend data
+      refetchLandDetails();
+      refetchLands();
+    } catch (err) {
+      console.error('Add tree error', err);
+      toast.error('Failed to plant tree.');
+    }
   };
 
   const totalYield = nfts.reduce((sum, nft) => sum + nft.dailyYield, 0);

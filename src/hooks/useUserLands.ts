@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { getUserLands, getLandDetails } from '@/lib/apiUser';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getUserLands, getLandDetails, updateLandSlot } from '@/lib/apiUser';
 
 export interface Land {
   id: number | string;
@@ -58,10 +58,30 @@ export const useLandDetails = (landId: number | string | null) => {
     enabled: !!landId,
   });
 
+  // Return both `land` and `landData` (alias) for compatibility with components
   return {
     land: data as LandDetails | null,
+    landData: data as LandDetails | null,
     isLoading,
     error: error ? (error instanceof Error ? error.message : 'Failed to fetch land details') : null,
     refetch,
   };
+};
+
+export const useUpdateLandSlot = (landId: number | string | null) => {
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    async ({ slotIndex, nftId }: { slotIndex: number; nftId: number | null }) => {
+      if (!landId) throw new Error('landId required');
+      return await updateLandSlot(landId, slotIndex, nftId);
+    },
+    {
+      onSuccess: () => {
+        // Refresh the land details and user lands lists
+        queryClient.invalidateQueries(['landDetails', landId]);
+        queryClient.invalidateQueries(['userLands']);
+      },
+    }
+  );
 };
