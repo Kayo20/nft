@@ -1,5 +1,7 @@
+// Allow an optional custom gateway from either Vite env (client-side) or server env vars
+const CUSTOM_GATEWAY = (((import.meta as any)?.env?.VITE_IPFS_GATEWAY) || process.env.IPFS_GATEWAY || process.env.VITE_IPFS_GATEWAY || '').replace(/\/$/, '');
 const DEFAULT_GATEWAYS = [
-  (process.env.IPFS_GATEWAY || 'https://ipfs.io/ipfs').replace(/\/$/, ''),
+  (CUSTOM_GATEWAY || 'https://ipfs.io/ipfs'),
   'https://cloudflare-ipfs.com/ipfs',
   'https://gateway.pinata.cloud/ipfs',
 ];
