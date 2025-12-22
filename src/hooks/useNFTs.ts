@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NFTTree } from '@/types';
 
 import { useNftManifest } from './useNftManifest';
-import { resolveIpfsMetadata } from '@/lib/ipfs';
+import { resolveIpfsMetadata } from '../lib/ipfs';
 
 export const useNFTs = (address: string | null) => {
   const [nfts, setNfts] = useState<NFTTree[]>([]);
@@ -72,6 +72,17 @@ export const useNFTs = (address: string | null) => {
         } catch (e) {
           copy.image_url_resolved = null;
         }
+
+        // Debug: if image is still missing, emit helpful debug info
+        if (!copy.image || copy.image === null || String(copy.image).trim() === '') {
+          try {
+            const dbg = await import('./debug');
+            dbg.debugMissingNFT(copy, 'useNFTs resolution');
+          } catch (e) {
+            // ignore if debug import fails
+          }
+        }
+
         return copy;
       }));
 

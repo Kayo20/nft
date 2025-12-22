@@ -24,11 +24,9 @@ export const TreeCard = ({ tree, onClick, selected }: TreeCardProps) => {
   // Defensive image source: use placeholder when tree.image is falsy or blank
   const imgSrc = (tree.image && String(tree.image).trim()) ? String(tree.image) : PLACEHOLDER;
   if (!tree.image || !String(tree.image).trim()) {
-    // Helpful debug output when an image is missing
-    // This will appear in the browser console for easier investigation
-    // (We keep it lightweight so it doesn't spam logs)
+    // Helpful debug output when an image is missing — include resolved metadata where available
     // eslint-disable-next-line no-console
-    console.warn(`TreeCard: missing image for tree #${tree.id}, using placeholder`);
+    console.warn(`TreeCard: missing image for tree #${tree.id}, using placeholder`, { id: tree.id, image: tree.image, image_url: (tree as any).image_url, image_url_resolved: (tree as any).image_url_resolved, metadata: (tree as any).metadata });
   }
 
   return (

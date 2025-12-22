@@ -53,7 +53,31 @@ export const handler: Handler = async (event) => {
       }));
     }
 
-    return { statusCode: 200, headers, body: JSON.stringify({ images, source: 'supabase-storage' }) };
+    // If Supabase storage had no images (e.g., local dev), try local assets fallback
+    let source = 'supabase-storage';
+    if (!images.length) {
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const cwd = process.cwd();
+        const assetsBase = path.join(cwd, 'src', 'assets');
+        const raritiesLocal = ['uncommon','rare','epic','legendary'];
+        for (const r of raritiesLocal) {
+          const dir = path.join(assetsBase, r);
+          try {
+            const files = fs.readdirSync(dir).filter(f => /\.(png|jpe?g|webp|svg)$/i.test(f));
+            files.forEach(f => images.push({ rarity: r, name: f, url: `/src/assets/${r}/${f}` }));
+          } catch (e) {
+            // ignore if directory missing
+          }
+        }
+        if (images.length) source = 'local-assets';
+      } catch (e) {
+        // ignore fallback errors
+      }
+    }
+
+    return { statusCode: 200, headers, body: JSON.stringify({ images, source }) };
   } catch (err: any) {
     console.error('list-nft-images error', err);
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message || String(err) }) };
