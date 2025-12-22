@@ -17,15 +17,40 @@ export function useNFTs(ownerAddress?: string) {
         if (error) throw error;
         const resolved = await Promise.all((data || []).map(async (n: any) => {
           let meta = n.metadata;
-          // If metadata looks like an IPFS uri or CID, resolve it
-          if (meta && typeof meta === 'string' && (meta.startsWith('ipfs://') || /^[a-zA-Z0-9]{46,}/.test(meta))) {
+          let resolvedMeta: any = null;
+          let imageUrl: string | null = null;
+
+          // Case A: metadata is a string (CID or ipfs:// or an http URL)
+          if (meta && typeof meta === 'string') {
             const fetched = await resolveIpfsMetadata(meta);
-            if (fetched) meta = fetched;
-          } else if (meta && typeof meta === 'object' && meta.image && typeof meta.image === 'string' && meta.image.startsWith('ipfs://')) {
-            const fetched = await resolveIpfsMetadata(meta.image);
-            if (fetched) meta = { ...meta, imageMetadata: fetched };
+            if (fetched) {
+              if (fetched.type === 'json') resolvedMeta = fetched.data;
+              if (fetched.type === 'asset') imageUrl = fetched.url;
+            }
           }
-          return { ...n, metadata: meta };
+
+          // Case B: metadata is an object with image pointing to IPFS / CID / URL
+          if (!resolvedMeta && meta && typeof meta === 'object') {
+            resolvedMeta = meta;
+            if (meta.image && typeof meta.image === 'string') {
+              // If image is ipfs:// or CID or http(s), try to resolve
+              const fetchedImg = await resolveIpfsMetadata(meta.image);
+              if (fetchedImg) {
+                if (fetchedImg.type === 'json') resolvedMeta = { ...resolvedMeta, imageMetadata: fetchedImg.data };
+                if (fetchedImg.type === 'asset') imageUrl = fetchedImg.url;
+              }
+            }
+          }
+
+          // Prefer imageUrl from metadata.image if present, else metadata.image field if it's already a URL
+          if (!imageUrl && resolvedMeta && typeof resolvedMeta === 'object' && resolvedMeta.image && typeof resolvedMeta.image === 'string' && /^https?:\/\//i.test(resolvedMeta.image)) {
+            imageUrl = resolvedMeta.image;
+          }
+
+          // Attach the best metadata and imageUrl for the UI
+          const finalMeta = resolvedMeta || (typeof meta === 'object' ? meta : null);
+
+          return { ...n, metadata: finalMeta, image_url_resolved: imageUrl };
         }));
         if (!mounted) return;
         setNfts(resolved);
