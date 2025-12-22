@@ -249,7 +249,14 @@ export default function Inventory() {
                 <div className="min-w-[320px] max-w-full mx-auto">
                   {/* Map slot nftIds to actual NFT objects so LandSlots can render images */}
                   <LandSlots
-                    trees={landSlots.map((s: any) => (s && s.nftId ? (nfts.find(n => n.id == s.nftId) || s.nft || null) : null))}
+                    trees={landSlots.map((s: any) => {
+                      if (!s || !s.nftId) return null;
+                      const raw = nfts.find((n: any) => n.id == s.nftId) || s.nft || null;
+                      if (!raw) return null;
+                      // normalize image fields: prefer resolved url then image then image_url then metadata
+                      const candidate = (raw as any).image_url_resolved || raw.image || (raw as any).image_url || (raw.metadata && raw.metadata.image) || null;
+                      return { ...raw, image_url_resolved: (raw as any).image_url_resolved || (candidate || null), image: raw.image || candidate || null } as any;
+                    })}
                     onSlotClick={handleSlotClick}
                     onAddTree={handleAddTree}
                     slots={landSlotCount}

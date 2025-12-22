@@ -21,12 +21,13 @@ export const TreeCard = ({ tree, onClick, selected }: TreeCardProps) => {
   const needsFertilizer = now - tree.lastFertilized > ITEM_CONSUMPTION_INTERVAL;
   const needsBugTreatment = now - tree.lastBugTreated > ITEM_CONSUMPTION_INTERVAL;
 
-  // Defensive image source: use placeholder when tree.image is falsy or blank
-  const imgSrc = (tree.image && String(tree.image).trim()) ? String(tree.image) : PLACEHOLDER;
-  if (!tree.image || !String(tree.image).trim()) {
+  // Prefer resolved URL (set by useNFTs) then fall back to other fields and finally placeholder
+  const candidateImage = (tree as any).image_url_resolved || tree.image || (tree as any).image_url || (tree.metadata && tree.metadata.image) || null;
+  const imgSrc = (candidateImage && String(candidateImage).trim()) ? String(candidateImage) : PLACEHOLDER;
+  if (!candidateImage) {
     // Helpful debug output when an image is missing — include resolved metadata where available
     // eslint-disable-next-line no-console
-    console.warn(`TreeCard: missing image for tree #${tree.id}, using placeholder`, { id: tree.id, image: tree.image, image_url: (tree as any).image_url, image_url_resolved: (tree as any).image_url_resolved, metadata: (tree as any).metadata });
+    console.warn(`TreeCard: missing image for tree #${tree.id}, using placeholder`, { id: tree.id, candidateImage, image: tree.image, image_url: (tree as any).image_url, image_url_resolved: (tree as any).image_url_resolved, metadata: (tree as any).metadata });
   }
 
   return (

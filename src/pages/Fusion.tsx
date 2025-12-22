@@ -163,7 +163,8 @@ export default function Fusion() {
                     <div key={index} className={`flex items-center justify-center bg-transparent p-2`}>
                       {selectedSlots[index] ? (() => {
                         const PLACEHOLDER = new URL('../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
-                        const candidate = selectedSlots[index] && selectedSlots[index]!.image;
+                      // Prefer resolved image (image_url_resolved) set during NFT enrichment, fall back to other fields
+                      const candidate = selectedSlots[index] && (selectedSlots[index]!.image_url_resolved || selectedSlots[index]!.image || selectedSlots[index]!.image_url || (selectedSlots[index]!.metadata && selectedSlots[index]!.metadata.image));
                         const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : PLACEHOLDER;
                         return (
                           <img
@@ -263,7 +264,10 @@ export default function Fusion() {
           <div className="py-4 px-2 sm:px-6">
             {chooserIndex !== null && (
               <FusionSelector
-                trees={nfts}
+                trees={nfts.map(n => {
+                  const candidate = (n as any).image_url_resolved || n.image || (n as any).image_url || (n.metadata && n.metadata.image) || null;
+                  return { ...n, image_url_resolved: (n as any).image_url_resolved || (candidate || null), image: n.image || candidate || null } as NFTTree;
+                })}
                 selectedTrees={selectedTrees}
                 onSelectTree={(tree: NFTTree) => assignTreeToSlot(tree, chooserIndex)}
               />
@@ -326,7 +330,7 @@ export default function Fusion() {
               <div className="w-full flex items-center justify-center">
                 {(() => {
                   const PLACEHOLDER = new URL('../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
-                  const candidate = fusionResult && fusionResult.image;
+                  const candidate = fusionResult && ((fusionResult as any).image_url_resolved || fusionResult.image || (fusionResult as any).image_url || (fusionResult.metadata && fusionResult.metadata.image));
                   const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : PLACEHOLDER;
                   return (
                     <img
