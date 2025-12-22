@@ -1,5 +1,5 @@
-// Allow an optional custom gateway from either Vite env (client-side) or server env vars
-const CUSTOM_GATEWAY = (((import.meta as any)?.env?.VITE_IPFS_GATEWAY) || process.env.IPFS_GATEWAY || process.env.VITE_IPFS_GATEWAY || '').replace(/\/$/, '');
+// Allow an optional custom gateway from environment variables (Vite injects these into process.env too)
+const CUSTOM_GATEWAY = (process.env.VITE_IPFS_GATEWAY || process.env.IPFS_GATEWAY || process.env.VITE_IPFS_GATEWAY || '').replace(/\/$/, '');
 const DEFAULT_GATEWAYS = [
   (CUSTOM_GATEWAY || 'https://ipfs.io/ipfs'),
   'https://cloudflare-ipfs.com/ipfs',
@@ -10,7 +10,7 @@ const CACHE_KEY_PREFIX = 'ipfs_meta_';
 const DEFAULT_TIMEOUT = 7000; // ms
 
 // Debug toggle: set VITE_IPFS_DEBUG or IPFS_DEBUG = '1' to enable verbose resolver logging
-const IPFS_DEBUG = ((import.meta as any)?.env?.VITE_IPFS_DEBUG === '1') || process.env.IPFS_DEBUG === '1';
+const IPFS_DEBUG = (process.env.VITE_IPFS_DEBUG === '1') || process.env.IPFS_DEBUG === '1';
 
 function timeoutFetch(url: string, ms = DEFAULT_TIMEOUT) {
   const controller = new AbortController();
