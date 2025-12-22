@@ -37,6 +37,30 @@ export const handler: Handler = async (event) => {
       }
     }
 
+    // First, try to read per-rarity IPFS folder CIDs from Supabase (table: nft_image_roots)
+    try {
+      const { data: roots, error: rootsErr } = await supabase.from('nft_image_roots').select('rarity, cid, gateway_url, ipfs_path');
+      if (!rootsErr && roots && roots.length) {
+        const imagesFromRoots: Array<any> = [];
+        for (const rrow of roots) {
+          const r = String(rrow.rarity || '').toLowerCase();
+          const candidateRoot = rrow.gateway_url || (rrow.cid ? `${(IPFS_ROOT || process.env.IPFS_GATEWAY || '').replace(/\/$/, '')}/${rrow.cid}` : null);
+          if (!candidateRoot) continue;
+          try {
+            const urls = await (await import('../../src/lib/ipfs')).listIpfsFolder(candidateRoot);
+            if (urls && urls.length) {
+              urls.forEach(u => imagesFromRoots.push({ rarity: r, name: u.split('/').pop(), url: u }));
+            }
+          } catch (e) {
+            console.warn('listing ipfs for root', candidateRoot, 'failed', e?.message || e);
+          }
+        }
+        if (imagesFromRoots.length) return { statusCode: 200, headers, body: JSON.stringify({ images: imagesFromRoots, source: 'nft-image-roots' }) };
+      }
+    } catch (e) {
+      console.warn('nft_image_roots listing failed:', e?.message || e);
+    }
+
     // Fallback to Supabase storage listing
     const images: Array<any> = [];
 

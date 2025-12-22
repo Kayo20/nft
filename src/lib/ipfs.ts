@@ -9,6 +9,9 @@ const DEFAULT_GATEWAYS = [
 const CACHE_KEY_PREFIX = 'ipfs_meta_';
 const DEFAULT_TIMEOUT = 7000; // ms
 
+// Debug toggle: set VITE_IPFS_DEBUG or IPFS_DEBUG = '1' to enable verbose resolver logging
+const IPFS_DEBUG = ((import.meta as any)?.env?.VITE_IPFS_DEBUG === '1') || process.env.IPFS_DEBUG === '1';
+
 function timeoutFetch(url: string, ms = DEFAULT_TIMEOUT) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), ms);
@@ -35,7 +38,9 @@ export async function resolveIpfsMetadata(uriOrCid: string, gateways: string[] =
   // Helper to try a single URL and parse JSON if applicable
   async function tryUrl(url: string) {
     try {
+      if (IPFS_DEBUG) console.debug('[IPFS] trying url', url);
       const res = await timeoutFetch(url);
+      if (IPFS_DEBUG) console.debug('[IPFS] response', url, 'status', res.status, 'ctype', res.headers.get('content-type'));
       if (!res.ok) return null;
       const ct = res.headers.get('content-type') || '';
       if (ct.includes('application/json') || ct.includes('text/json')) {
@@ -45,6 +50,7 @@ export async function resolveIpfsMetadata(uriOrCid: string, gateways: string[] =
       // fallback: if it's an image or other binary, return URL so caller can use as src
       return { type: 'asset', url };
     } catch (e) {
+      if (IPFS_DEBUG) console.debug('[IPFS] tryUrl error', url, e?.message || e);
       return null;
     }
   }
@@ -78,7 +84,9 @@ export async function listIpfsFolder(uriOrCid: string, gateways: string[] = DEFA
 
   async function tryUrl(url: string) {
     try {
+      if (IPFS_DEBUG) console.debug('[IPFS list] trying url', url);
       const res = await timeoutFetch(url);
+      if (IPFS_DEBUG) console.debug('[IPFS list] response', url, 'status', res.status, 'ctype', res.headers.get('content-type'));
       if (!res.ok) return null;
       const ct = res.headers.get('content-type') || '';
       if (ct.includes('application/json')) {
@@ -115,6 +123,7 @@ export async function listIpfsFolder(uriOrCid: string, gateways: string[] = DEFA
       if (ct.startsWith('image/')) return [url];
       return null;
     } catch (e) {
+      if (IPFS_DEBUG) console.debug('[IPFS list] tryUrl error', url, e?.message || e);
       return null;
     }
   }
