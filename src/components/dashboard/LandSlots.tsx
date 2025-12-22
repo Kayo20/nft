@@ -46,15 +46,25 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, slots = 9, className 
                       {(() => {
                         const candidate = tree && ((tree as any).image_url_resolved || tree.image || tree.image_url || (tree.metadata && tree.metadata.image));
                         const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : null;
+                        const [slotImgLoaded, setSlotImgLoaded] = [false, (_: boolean) => {}];
+
                         if (imgSrc) {
                           return (
-                            <img
-                              src={imgSrc}
-                              alt={`Tree ${tree ? tree.id : 'empty'}`}
-                              className="w-full h-full object-contain"
-                              style={{ background: 'none', display: 'block' }}
-                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                            />
+                            <div className="relative w-full h-full">
+                              {/* Skeleton */}
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-3/4 h-3/4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-md" />
+                              </div>
+                              <img
+                                src={imgSrc}
+                                loading="lazy"
+                                alt={`Tree ${tree ? tree.id : 'empty'}`}
+                                className="w-full h-full object-contain"
+                                style={{ background: 'none', display: 'block' }}
+                                onLoad={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'block'; }}
+                                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                              />
+                            </div>
                           );
                         }
                         // No image available — render an empty container to preserve layout

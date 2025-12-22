@@ -138,6 +138,25 @@ export default function Landing() {
           setRarityTrees(updated);
           console.log('Updated rarityTrees after Supabase fetch:', updated);
         }
+
+        // Preload the first few rarity images for faster hero rendering
+        try {
+          const toPreload = (updated || []).map((i: any) => i.image).filter(Boolean).slice(0, 3);
+          toPreload.forEach((url: string) => {
+            try {
+              const link = document.createElement('link');
+              link.rel = 'preload';
+              link.as = 'image';
+              link.href = url;
+              link.crossOrigin = 'anonymous';
+              document.head.appendChild(link);
+            } catch (e) {
+              // ignore
+            }
+          });
+        } catch (e) {
+          // ignore
+        }
       } catch (e) {
         console.error('Failed to load NFT images:', e);
         // Keep initial local images (they were already set)
