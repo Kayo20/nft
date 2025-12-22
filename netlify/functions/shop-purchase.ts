@@ -76,17 +76,22 @@ export const handler: Handler = async (event) => {
     const feeAmount = (await import('../../src/lib/constants')).TRANSACTION_FEE_TF;
     const { data: tx, error: txErr } = await supabase
       .from("transactions")
-      .insert([{ user_address: address, type: "purchase", amount: total, fee: feeAmount, total_paid: total + feeAmount, metadata: { itemId, qty, txHash } }])
+      .insert([{ user_id: userId, type: "purchase", amount: total, fee: feeAmount, total_paid: total + feeAmount, metadata: { itemId, qty, txHash } }])
       .select()
       .single();
     if (txErr) throw txErr;
 
     // Upsert inventory
-    const { data: inv } = await supabase.from("inventories").select("id, qty").eq("user_address", address).eq("item_id", itemId).single();
+    // Resolve user UUID by wallet address and use user_id in inventories/transactions
+    const { data: userRow, error: userErr } = await supabase.from('users').select('id, wallet_address').eq('wallet_address', address).single();
+    if (userErr || !userRow) return { statusCode: 500, headers, body: JSON.stringify({ error: 'user lookup failed' }) };
+    const userId = userRow.id;
+
+    const { data: inv } = await supabase.from("inventories").select("id, qty").eq("user_id", userId).eq("item_id", itemId).single();
     if (inv && inv.id) {
       await supabase.from("inventories").update({ qty: Number(inv.qty) + Number(qty) }).eq("id", inv.id);
     } else {
-      await supabase.from("inventories").insert([{ user_address: address, item_id: itemId, qty }]);
+      await supabase.from("inventories").insert([{ user_id: userId, item_id: itemId, qty }]);
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, tx }) };

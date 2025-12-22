@@ -26,26 +26,31 @@ export const handler: Handler = async (event) => {
 
     const address = session.address;
 
-    // Fetch inventory from Supabase
-    const { data: inventory } = await supabase
-      .from("inventories")
-      .select("*")
-      .eq("owner", address)
-      .single()
-      .catch(() => ({ data: null }));
+    // Resolve user UUID
+    const { data: userRow, error: userErr } = await supabase.from('users').select('id').eq('wallet_address', address).single();
+    const userId = userRow?.id || null;
 
-    // If no inventory record, return zeros
-    if (!inventory) {
+    // Fetch inventory rows (user_id, item_id, qty)
+    const { data: rows, error: invErr } = await supabase
+      .from("inventories")
+      .select("item_id, qty")
+      .eq("user_id", userId);
+
+    if (!rows || rows.length === 0) {
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           address,
-          water: 0,
-          fertilizer: 0,
-          antiBug: 0,
+          items: [],
         }),
       };
+    }
+
+    // Transform to key:count map for compatibility with older UI
+    const map: Record<string, number> = {};
+    for (const r of rows) {
+      map[r.item_id] = Number(r.qty || 0);
     }
 
     return {
@@ -53,9 +58,10 @@ export const handler: Handler = async (event) => {
       headers,
       body: JSON.stringify({
         address,
-        water: inventory.water || 0,
-        fertilizer: inventory.fertilizer || 0,
-        antiBug: inventory.antiBug || 0,
+        items: rows,
+        water: map['water'] || 0,
+        fertilizer: map['fertilizer'] || 0,
+        antiBug: map['antiBug'] || 0,
       }),
     };
   } catch (err: any) {

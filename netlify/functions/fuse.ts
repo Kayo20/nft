@@ -161,10 +161,12 @@ export const handler: Handler = async (event) => {
     const { error: burnErr } = await supabase.from("nfts").update({ status: "burned" }).in("id", nftIds);
     if (burnErr) throw burnErr;
 
-    // Log fusion history (include expected cost and fee)
+    // Log fusion history (include expected cost and fee) -- use user_id
     const feeAmount = (await import('../../src/lib/constants')).TRANSACTION_FEE_TF;
+    const { data: userRow } = await supabase.from('users').select('id').eq('wallet_address', address).single();
+    const userId = userRow?.id || null;
     await supabase.from("fusion_history").insert([
-      { user_address: address, input_nft_ids: nftIds, result_nft_id: createdData.id, cost: expectedCost, fee: feeAmount, total_paid: expectedCost + feeAmount, tx_hash: txHash },
+      { user_id: userId, input_nft_ids: nftIds, result_nft_id: createdData.id, cost: expectedCost, fee: feeAmount, total_paid: expectedCost + feeAmount, tx_hash: txHash },
     ]);
 
     return { statusCode: 200, headers, body: JSON.stringify({ nft: createdData }) };

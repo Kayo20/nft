@@ -99,10 +99,12 @@ export const handler: Handler = async (event) => {
 
     if (insertErr) throw insertErr;
 
-    // Log chest purchase transaction
+    // Log chest purchase transaction (use user_id)
     try {
       const fee = (await import('../../src/lib/constants')).TRANSACTION_FEE_TF;
-      await supabase.from('transactions').insert([{ user_address: address, type: 'chest', amount: CHEST_PRICE, fee, total_paid: CHEST_PRICE + fee, metadata: { type, txHash } }]);
+      const { data: userRow, error: uErr } = await supabase.from('users').select('id').eq('wallet_address', address).single();
+      const userId = (userRow && userRow.id) ? userRow.id : null;
+      await supabase.from('transactions').insert([{ user_id: userId, type: 'chest', amount: CHEST_PRICE, fee, total_paid: CHEST_PRICE + fee, metadata: { type, txHash } }]);
     } catch (err) {
       console.warn('Failed to log chest transaction', err);
     }
