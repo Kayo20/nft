@@ -254,7 +254,32 @@ You now have:
 ✅ Clear documentation for every step
 ✅ Troubleshooting for common issues
 
-**Total setup time: 5-15 minutes depending on upload method**
 
-Good luck! 🚀
+---
+
+## Pinning images to IPFS (Pinata)
+
+If you want the site to prefer IPFS-hosted images (recommended):
+
+1. Ensure Pinata keys are available in `.env.local` or your environment:
+   - `PINATA_API_KEY`
+   - `PINATA_SECRET_API_KEY`
+2. Run the new script which will download images from Supabase and pin them to Pinata:
+   ```bash
+   npm install && npm run pin-nft-images-pinata
+   ```
+3. The script prints an IPFS CID (e.g. `Qm...`). Set your Netlify server env:
+   - `IPFS_IMAGES_ROOT=ipfs://<CID>`
+4. (Optional) Run the manifest generator to upload `manifest.json` to Supabase:
+   ```bash
+   IPFS_IMAGES_ROOT=ipfs://<CID> node tools/generate-manifest.js
+   ```
+
+Once `IPFS_IMAGES_ROOT` is set on the server, the runtime endpoint `/.netlify/functions/list-nft-images` will prefer IPFS and your production site will load images from IPFS instead of Supabase storage.
+
+**Note:** If you'd rather not provide keys locally, I can run the pinning script for you if you temporarily share the Pinata keys, or I can prepare CI/Netlify steps to run the script in your environment.
+
+**Total setup time:** ~5-15 minutes (network speed dependent)
+
+**Good luck! 🚀**
 

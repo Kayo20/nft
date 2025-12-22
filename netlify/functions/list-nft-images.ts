@@ -14,11 +14,33 @@ export const handler: Handler = async (event) => {
   const headers = { 'Content-Type': 'application/json' };
   try {
     const rarities = ['uncommon','rare','epic','legendary'];
+
+    // If an IPFS root is configured on the server, prefer it (set via Netlify env: IPFS_IMAGES_ROOT)
+    const IPFS_ROOT = process.env.IPFS_IMAGES_ROOT || process.env.VITE_IPFS_IMAGES_ROOT || '';
+    if (IPFS_ROOT) {
+      try {
+        const ipfsLib = await import('../../src/lib/ipfs');
+        const imagesFromIpfs: Array<any> = [];
+        for (const r of rarities) {
+          const candidates = [`${IPFS_ROOT.replace(/\/$/, '')}/${r}`, `${IPFS_ROOT.replace(/\/$/, '')}/${r.charAt(0).toUpperCase()+r.slice(1)}`];
+          for (const candidate of candidates) {
+            const urls = await ipfsLib.listIpfsFolder(candidate);
+            if (urls && urls.length) {
+              urls.forEach(u => imagesFromIpfs.push({ rarity: r, name: u.split('/').pop(), url: u }));
+              break;
+            }
+          }
+        }
+        if (imagesFromIpfs.length) return { statusCode: 200, headers, body: JSON.stringify({ images: imagesFromIpfs, source: 'ipfs-root' }) };
+      } catch (e) {
+        console.warn('IPFS root listing failed:', e?.message || e);
+      }
+    }
+
+    // Fallback to Supabase storage listing
     const images: Array<any> = [];
 
     for (const r of rarities) {
-      // Debug: ensure storage listing works (service role key usually required)
-      // console.log('Using key:', SUPABASE_KEY ? 'present' : 'missing');
       const { data, error } = await supabase.storage.from(BUCKET).list(r, { limit: 100 });
       if (error) {
         console.warn('list error for', r, error.message || error);
@@ -26,13 +48,14 @@ export const handler: Handler = async (event) => {
       }
       (data || []).forEach(f => images.push({
         rarity: r,
-        file: f.name,
+        name: f.name,
         url: `${SUPABASE_URL_CLEAN}/storage/v1/object/public/${BUCKET}/${r}/${f.name}`
       }));
     }
 
-    return { statusCode: 200, headers, body: JSON.stringify({ images }) };
+    return { statusCode: 200, headers, body: JSON.stringify({ images, source: 'supabase-storage' }) };
   } catch (err: any) {
+    console.error('list-nft-images error', err);
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message || String(err) }) };
   }
 };

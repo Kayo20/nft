@@ -19,10 +19,12 @@
     "debug-redeem": "node scripts/debug-redeem.js",
     "list-users": "node scripts/list-users.js",
     "e2e-auth-test": "node scripts/e2e-auth-test.js",
+    "pin-nft-images-pinata": "node tools/pin-nft-images-pinata-http.js",
     "preview": "vite preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@pinata/sdk": "^2.1.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -54,6 +56,7 @@
     "@react-three/fiber": "^9.4.0",
     "@supabase/supabase-js": "^2.87.1",
     "@tanstack/react-query": "^5.56.2",
+    "form-data": "^4.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -89,6 +92,7 @@
     "@metagptx/vite-plugin-source-locator": "latest",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/typography": "^0.5.15",
+    "@testing-library/react-hooks": "^8.0.1",
     "@types/node": "^22.5.5",
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.8",
@@ -108,7 +112,6 @@
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1",
     "vitest": "^1.0.0",
-    "@testing-library/react-hooks": "^8.0.1",
     "whatwg-fetch": "^3.6.2"
   }
 }

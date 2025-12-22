@@ -4,7 +4,22 @@ import { listIpfsFolder } from '../lib/ipfs';
 type ManifestImage = { rarity: string; name: string; url: string };
 
 export async function fetchManifestImages(): Promise<ManifestImage[]> {
-  // Prefer IPFS root when configured
+  // Runtime-first: try the server function which reads Netlify server envs (IPFS root)
+  try {
+    const fnUrl = '/.netlify/functions/list-nft-images';
+    const res = await fetch(fnUrl);
+    if (res.ok) {
+      const json = await res.json();
+      if (Array.isArray(json.images) && json.images.length) {
+        return json.images.map((i: any) => ({ rarity: String(i.rarity || '').toLowerCase(), name: i.name, url: i.url }));
+      }
+    }
+  } catch (e) {
+    // ignore and fall through
+    console.warn('list-nft-images call failed:', (e as any)?.message || e);
+  }
+
+  // Prefer IPFS root when configured at build time
   const IPFS_ROOT = (import.meta.env.VITE_IPFS_IMAGES_ROOT as string) || '';
   const rarities = ['uncommon', 'rare', 'epic', 'legendary'];
   const images: ManifestImage[] = [];
@@ -46,6 +61,7 @@ export async function fetchManifestImages(): Promise<ManifestImage[]> {
 
 export function useNftManifest() {
   const [images, setImages] = useState<ManifestImage[]>([]);
+  const [source, setSource] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,6 +70,22 @@ export function useNftManifest() {
       setIsLoading(true);
       setError(null);
       try {
+        // Try the server function first to get source info
+        try {
+          const fnRes = await fetch('/.netlify/functions/list-nft-images');
+          if (fnRes.ok) {
+            const fnJson = await fnRes.json();
+            const list = (fnJson.images || []).map((i: any) => ({ rarity: String(i.rarity || '').toLowerCase(), name: i.name, url: i.url }));
+            setImages(list);
+            if (fnJson.source) setSource(fnJson.source);
+            setIsLoading(false);
+            return;
+          }
+        } catch (e) {
+          // ignore and fall back to fetchManifestImages
+          // console.warn('list function failed:', e);
+        }
+
         const list = await fetchManifestImages();
         setImages(list);
       } catch (err: any) {
@@ -66,5 +98,5 @@ export function useNftManifest() {
     run();
   }, []);
 
-  return { images, isLoading, error };
+  return { images, source, isLoading, error };
 }

@@ -27,6 +27,16 @@ describe('fetchManifestImages', () => {
     expect(imgs[0].url).toContain('ipfs.test');
   });
 
+  it('calls server list endpoint when available (runtime)', async () => {
+    // mock fetch to respond to the server function
+    (global as any).fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ images: [{ rarity: 'rare', name: '1.png', url: 'https://ipfs.test/QmRoot/Rare/1.png' }], source: 'ipfs-root' }) });
+
+    const { fetchManifestImages } = await import('../src/hooks/useNftManifest');
+    const imgs = await fetchManifestImages();
+    expect(imgs.length).toBe(1);
+    expect(imgs[0].url).toContain('ipfs.test');
+  });
+
   it('falls back to Supabase manifest when no IPFS root or empty', async () => {
     // ensure IPFS root not set
     (process.env as any).VITE_IPFS_IMAGES_ROOT = '';
