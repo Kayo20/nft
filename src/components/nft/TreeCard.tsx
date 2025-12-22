@@ -76,10 +76,11 @@ export const TreeCard = ({ tree, onClick, selected }: TreeCardProps) => {
                 data-original-src={tree.image || ''}
                 className="w-full h-full object-contain"
                 style={{ display: 'block', background: 'none' }}
+                loading="lazy"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
-              <div className="w-full h-full" aria-hidden />
+              <div className="w-full h-full animate-pulse bg-gray-100 dark:bg-gray-800" aria-hidden />
             )}
             {tree.rarity === 'Legendary' && (
               <div className="absolute inset-0 bg-gradient-to-t from-[#E2B13C]/30 to-transparent animate-pulse pointer-events-none" />

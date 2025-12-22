@@ -11,6 +11,8 @@ const DEFAULT_TIMEOUT = 7000; // ms
 
 // Debug toggle: set VITE_IPFS_DEBUG or IPFS_DEBUG = '1' to enable verbose resolver logging
 const IPFS_DEBUG = (process.env.VITE_IPFS_DEBUG === '1') || process.env.IPFS_DEBUG === '1';
+// Optional server proxy fallback (set VITE_USE_IPFS_PROXY=1 or IPFS_PROXY_ENABLED=1 to enable)
+const USE_IPFS_PROXY = (process.env.VITE_USE_IPFS_PROXY === '1') || (process.env.IPFS_PROXY_ENABLED === '1');
 
 function timeoutFetch(url: string, ms = DEFAULT_TIMEOUT) {
   const controller = new AbortController();
@@ -71,6 +73,20 @@ export async function resolveIpfsMetadata(uriOrCid: string, gateways: string[] =
     if (r) {
       try { sessionStorage.setItem(cacheKey(normalized), JSON.stringify(r)); } catch {};
       return r;
+    }
+
+    // If enabled, try a server-side proxy as a last resort (avoids CORS/403 issues on custom gateways)
+    if (USE_IPFS_PROXY && typeof window !== 'undefined') {
+      try {
+        const proxyUrl = `/.netlify/functions/ipfs-proxy?url=${encodeURIComponent(url)}`;
+        const pr = await tryUrl(proxyUrl);
+        if (pr) {
+          try { sessionStorage.setItem(cacheKey(normalized), JSON.stringify(pr)); } catch {};
+          return pr;
+        }
+      } catch (e) {
+        if (IPFS_DEBUG) console.debug('[IPFS] proxy fallback failed', url, e?.message || e);
+      }
     }
   }
 

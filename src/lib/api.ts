@@ -84,6 +84,16 @@ export async function startFarming(nftId: number, itemIds: ('water' | 'fertilize
   return res.json();
 }
 
+export async function getFarmingStates() {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/.netlify/functions/get-farming-states`, { credentials: 'include' });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`Get farming states failed: ${txt}`);
+  }
+  return res.json();
+}
+
 export async function claimRewards(nftId: number, txHash?: string) {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/.netlify/functions/claim`, {

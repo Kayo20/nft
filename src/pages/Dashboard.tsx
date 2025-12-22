@@ -22,6 +22,10 @@ import {
   Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { transferERC20 } from '@/lib/web3';
+import { TF_TOKEN_CONTRACT, GAME_WALLET, TRANSACTION_FEE_TF } from '@/lib/constants';
+import { startFarming as startFarmingApi, getFarmingStates } from '@/lib/api';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 
 class DashboardErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
@@ -48,7 +52,7 @@ export default function Dashboard() {
   const { wallet } = useWallet();
   const demoAddress = wallet.address || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
   const { nfts: allNFTs, isLoading } = useNFTs(demoAddress);
-  const { inventory } = useItems(demoAddress);
+  const { inventory, refetch: refetchItems } = useItems(demoAddress);
   const [tfBalance, setTfBalance] = useState(0);
   const [bnbBalance, setBnbBalance] = useState(0);
 
@@ -71,6 +75,87 @@ export default function Dashboard() {
   // Always keep a full array of 9 slots, each slot is either a tree (with slotIndex) or undefined
   const SLOT_COUNT = 9;
   const [landSlots, setLandSlots] = useState<(typeof allNFTs[0])[]>(Array(SLOT_COUNT).fill(undefined));
+
+  // Farming and transfer UI state
+  const [transferInProgress, setTransferInProgress] = useState(false);
+  const [transferAction, setTransferAction] = useState<string | null>(null);
+  const [verifyingTx, setVerifyingTx] = useState(false);
+
+  // Fetch farming states for the current user's NFTs and merge into landSlots
+  const fetchAndMergeFarming = async () => {
+    try {
+      const res: any = await getFarmingStates();
+      const farmingStates: any[] = res.farmingStates || [];
+      if (!farmingStates || farmingStates.length === 0) return;
+      setLandSlots(prev => prev.map(slot => {
+        if (!slot) return slot;
+        const match = farmingStates.find(s => s.nftId === slot.id || s.nft_id === slot.id);
+        if (match && match.farming) {
+          return { ...slot, farmingState: match.farming };
+        }
+        if (match && (match.farming_started || match.active_items)) {
+          return { ...slot, farmingState: { farming_started: match.farming_started, active_items: match.active_items, is_farming_active: match.is_farming_active } };
+        }
+        return slot;
+      }));
+    } catch (e) {
+      // ignore; not critical
+      // console.debug('Failed to fetch farming states', e);
+    }
+  };
+
+  // Load farming states whenever NFTs or landSlots change
+  useEffect(() => {
+    if (!isLoading && allNFTs) {
+      fetchAndMergeFarming();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, allNFTs]);
+
+  // Start farming handler (transfers TF fee then calls start-farming API)
+  const handleStartFarming = async (slotIndex: number, itemIds: ('water' | 'fertilizer' | 'antiBug')[]) => {
+    const slot = landSlots[slotIndex];
+    if (!slot) {
+      toast.error('No tree in slot');
+      return;
+    }
+    if (!wallet.isConnected) {
+      toast.error('Please connect your wallet to start farming');
+      return;
+    }
+    try {
+      setTransferInProgress(true);
+      setTransferAction('start-farming');
+      toast('Please confirm the TF transaction to start farming (transaction fee)...', { duration: 4000 });
+      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(TRANSACTION_FEE_TF));
+      const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
+      setTransferInProgress(false);
+      setVerifyingTx(true);
+
+      const result = await startFarmingApi(slot.id, itemIds, txHash);
+      setVerifyingTx(false);
+
+      if (result && (result.ok || result.farmingStarted)) {
+        // update slot farmingState
+        const farmingState = {
+          farming_started: result.farmingStarted || result.farming_started || new Date().toISOString(),
+          active_items: result.activeItems || result.active_items || itemIds.map(id => ({ itemId: id, expiresAt: Date.now() + 4 * 60 * 60 * 1000 })),
+          is_farming_active: true,
+        };
+        setLandSlots(prev => prev.map((s, i) => i === slotIndex ? { ...s, farmingState } : s));
+        // refresh inventory counts
+        try { refetchItems(); } catch (e) { /* ignore */ }
+        toast.success('Farming started — Active for 4 hours');
+      } else {
+        toast.error('Failed to start farming');
+      }
+    } catch (err) {
+      setTransferInProgress(false);
+      setVerifyingTx(false);
+      console.error('start farming failed', err);
+      toast.error('Start farming failed');
+    }
+  };
 
   // Show loading state while NFTs are loading
   if (isLoading) {
@@ -186,15 +271,23 @@ export default function Dashboard() {
           transition={{ delay: 0.2 }}
           className="lg:col-span-2"
         >
-          <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
-                <TreePine className="w-5 h-5 text-[#0F5F3A] dark:text-[#22C55E]" />
-                Land Overview (9 Slots)
-              </CardTitle>
+          {(transferInProgress || verifyingTx) && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+              <Alert className="border-[#0F5F3A] dark:border-[#22C55E] bg-[#0F5F3A]/5 dark:bg-[#22C55E]/5">
+                <AlertDescription className="text-gray-900 dark:text-white">
+                  {transferInProgress ? (
+                    'Waiting for transaction signature in wallet...'
+                  ) : (
+                    'Verifying transaction on-chain...'
+                  )}
+                </AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+
             </CardHeader>
             <CardContent>
-              <LandSlots trees={landSlots} onSlotClick={handleSlotClick} />
+              <LandSlots trees={landSlots} onSlotClick={handleSlotClick} onStartFarming={handleStartFarming} transferInProgress={transferInProgress} transferAction={transferAction} verifyingTx={verifyingTx} />
             </CardContent>
           </Card>
         </motion.div>

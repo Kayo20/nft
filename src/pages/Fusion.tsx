@@ -170,8 +170,7 @@ export default function Fusion() {
                           <img
                             src={imgSrc}
                             alt={`Tree ${selectedSlots[index]!.id}`}
-                            className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                            className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain"                            loading="lazy"                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                           />
                         );
                       }
