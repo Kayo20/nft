@@ -44,18 +44,21 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, slots = 9, className 
                   <>
                     <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 mb-3 rounded-lg overflow-hidden shadow-md">
                       {(() => {
-                        const PLACEHOLDER = new URL('../../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
-                        const candidate = tree && (tree.image || tree.image_url_resolved || tree.image_url || (tree.metadata && tree.metadata.image));
-                        const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : PLACEHOLDER;
-                        return (
-                          <img
-                            src={imgSrc}
-                            alt={`Tree ${tree ? tree.id : 'empty'}`}
-                            className="w-full h-full object-contain"
-                            style={{ background: 'none', display: 'block' }}
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
-                          />
-                        );
+                        const candidate = tree && ((tree as any).image_url_resolved || tree.image || tree.image_url || (tree.metadata && tree.metadata.image));
+                        const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : null;
+                        if (imgSrc) {
+                          return (
+                            <img
+                              src={imgSrc}
+                              alt={`Tree ${tree ? tree.id : 'empty'}`}
+                              className="w-full h-full object-contain"
+                              style={{ background: 'none', display: 'block' }}
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          );
+                        }
+                        // No image available — render an empty container to preserve layout
+                        return <div className="w-full h-full" aria-hidden />;
                       })()}
                     </div>
                   <Badge

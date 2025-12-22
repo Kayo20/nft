@@ -21,13 +21,13 @@ export const TreeCard = ({ tree, onClick, selected }: TreeCardProps) => {
   const needsFertilizer = now - tree.lastFertilized > ITEM_CONSUMPTION_INTERVAL;
   const needsBugTreatment = now - tree.lastBugTreated > ITEM_CONSUMPTION_INTERVAL;
 
-  // Prefer resolved URL (set by useNFTs) then fall back to other fields and finally placeholder
+  // Prefer resolved URL (set by useNFTs) then fall back to other fields. Do NOT fall back to placeholder — render image only when present.
   const candidateImage = (tree as any).image_url_resolved || tree.image || (tree as any).image_url || (tree.metadata && tree.metadata.image) || null;
-  const imgSrc = (candidateImage && String(candidateImage).trim()) ? String(candidateImage) : PLACEHOLDER;
+  const imgSrc = (candidateImage && String(candidateImage).trim()) ? String(candidateImage) : null;
   if (!candidateImage) {
-    // Helpful debug output when an image is missing — include resolved metadata where available
+    // Helpful debug output when an image is missing — do not substitute a placeholder
     // eslint-disable-next-line no-console
-    console.warn(`TreeCard: missing image for tree #${tree.id}, using placeholder`, { id: tree.id, candidateImage, image: tree.image, image_url: (tree as any).image_url, image_url_resolved: (tree as any).image_url_resolved, metadata: (tree as any).metadata });
+    console.warn(`TreeCard: missing image for tree #${tree.id}`, { id: tree.id, candidateImage, image: tree.image, image_url: (tree as any).image_url, image_url_resolved: (tree as any).image_url_resolved, metadata: (tree as any).metadata });
   }
 
   return (
@@ -69,14 +69,18 @@ export const TreeCard = ({ tree, onClick, selected }: TreeCardProps) => {
         <CardContent className="space-y-3">
           {/* Tree Image */}
           <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-[#0F5F3A]/10 to-[#166C47]/10">
-            <img
-              src={imgSrc}
-              alt={`Tree ${tree.id}`}
-              data-original-src={tree.image || ''}
-              className="w-full h-full object-contain"
-              style={{ display: 'block', background: 'none' }}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
-            />
+            {imgSrc ? (
+              <img
+                src={imgSrc}
+                alt={`Tree ${tree.id}`}
+                data-original-src={tree.image || ''}
+                className="w-full h-full object-contain"
+                style={{ display: 'block', background: 'none' }}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+            ) : (
+              <div className="w-full h-full" aria-hidden />
+            )}
             {tree.rarity === 'Legendary' && (
               <div className="absolute inset-0 bg-gradient-to-t from-[#E2B13C]/30 to-transparent animate-pulse pointer-events-none" />
             )}

@@ -162,19 +162,21 @@ export default function Fusion() {
                   {[0, 1, 2].map((index) => (
                     <div key={index} className={`flex items-center justify-center bg-transparent p-2`}>
                       {selectedSlots[index] ? (() => {
-                        const PLACEHOLDER = new URL('../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
-                      // Prefer resolved image (image_url_resolved) set during NFT enrichment, fall back to other fields
+                      // Prefer resolved image (image_url_resolved) set during NFT enrichment. No placeholder fallback — render only if present.
                       const candidate = selectedSlots[index] && (selectedSlots[index]!.image_url_resolved || selectedSlots[index]!.image || selectedSlots[index]!.image_url || (selectedSlots[index]!.metadata && selectedSlots[index]!.metadata.image));
-                        const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : PLACEHOLDER;
+                      const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : null;
+                      if (imgSrc) {
                         return (
                           <img
                             src={imgSrc}
                             alt={`Tree ${selectedSlots[index]!.id}`}
                             className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                           />
                         );
-                      })() : (
+                      }
+                      return <div className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56" aria-hidden />;
+                    })() : (
                         <button
                           onClick={() => setChooserIndex(index)}
                           className="flex flex-col items-center justify-center w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:border-[#0F5F3A] transition-colors"
@@ -329,17 +331,19 @@ export default function Fusion() {
             <div className="space-y-4 py-4">
               <div className="w-full flex items-center justify-center">
                 {(() => {
-                  const PLACEHOLDER = new URL('../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
                   const candidate = fusionResult && ((fusionResult as any).image_url_resolved || fusionResult.image || (fusionResult as any).image_url || (fusionResult.metadata && fusionResult.metadata.image));
-                  const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : PLACEHOLDER;
-                  return (
-                    <img
-                      src={imgSrc}
-                      alt={`Tree ${fusionResult.id}`}
-                      className="w-48 h-48 object-contain"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
-                    />
-                  );
+                  const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : null;
+                  if (imgSrc) {
+                    return (
+                      <img
+                        src={imgSrc}
+                        alt={`Tree ${fusionResult.id}`}
+                        className="w-48 h-48 object-contain"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    );
+                  }
+                  return <div className="w-48 h-48" aria-hidden />;
                 })()}
               </div>
               <div className="text-center space-y-2">
