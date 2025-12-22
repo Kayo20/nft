@@ -247,8 +247,9 @@ export default function Inventory() {
             <CardContent>
               <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
                 <div className="min-w-[320px] max-w-full mx-auto">
+                  {/* Map slot nftIds to actual NFT objects so LandSlots can render images */}
                   <LandSlots
-                    trees={landSlots}
+                    trees={landSlots.map((s: any) => (s && s.nftId ? (nfts.find(n => n.id == s.nftId) || s.nft || null) : null))}
                     onSlotClick={handleSlotClick}
                     onAddTree={handleAddTree}
                     slots={landSlotCount}

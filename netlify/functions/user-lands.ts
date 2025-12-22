@@ -24,7 +24,7 @@ export const handler: Handler = async (event) => {
       return { statusCode: 401, headers, body: JSON.stringify({ error: "unauthorized" }) };
     }
 
-    const address = session.address;
+    const address = (session.address || '').toLowerCase();
 
     // Fetch lands for this user
     // For now, we'll create a default land if none exists

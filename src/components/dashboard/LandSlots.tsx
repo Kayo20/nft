@@ -43,11 +43,11 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, slots = 9, className 
                 {tree ? (
                   <>
                     <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 mb-3 rounded-lg overflow-hidden shadow-md">
-                      <img src={tree.image} alt={`Tree ${tree.id}`} className="w-full h-full object-contain" style={{ background: 'none', display: 'block' }} />
+                      <img src={tree.image || tree.image_url_resolved || tree.image_url || (tree.metadata && tree.metadata.image)} alt={`Tree ${tree.id}`} className="w-full h-full object-contain" style={{ background: 'none', display: 'block' }} />
                     </div>
                   <Badge
                     className="text-xs mb-1"
-                    style={{ backgroundColor: RARITY_COLORS[tree.rarity], color: 'white' }}
+                    style={{ backgroundColor: RARITY_COLORS[(tree.rarity || tree.metadata?.rarity || '').toLowerCase()] || '#999', color: 'white' }}
                   >
                     {tree.rarity}
                   </Badge>

@@ -29,7 +29,7 @@ export const handler: Handler = async (event) => {
       return { statusCode: 401, headers, body: JSON.stringify({ error: "unauthorized" }) };
     }
 
-    const address = session.address;
+    const address = (session.address || '').toLowerCase();
 
     // Parse request body
     if (!event.body) {
@@ -76,7 +76,7 @@ export const handler: Handler = async (event) => {
         .from("nfts")
         .select("*")
         .eq("id", nftId)
-        .eq("owner", address)
+        .eq("owner_address", address)
         .single()
         .catch(() => ({ data: null }));
 
