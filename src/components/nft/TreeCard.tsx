@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
 import { NFTTree } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,20 +24,6 @@ export const TreeCard = ({ tree, onClick, selected }: TreeCardProps) => {
   // Prefer resolved URL (set by useNFTs) then fall back to other fields. Do NOT fall back to placeholder — render image only when present.
   const candidateImage = (tree as any).image_url_resolved || tree.image || (tree as any).image_url || (tree.metadata && tree.metadata.image) || null;
   const imgSrc = (candidateImage && String(candidateImage).trim()) ? String(candidateImage) : null;
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const imgLoadStartRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    // reset on image change
-    if (imgSrc) {
-      imgLoadStartRef.current = performance.now();
-      setImgLoaded(false);
-    } else {
-      setImgLoaded(false);
-      imgLoadStartRef.current = null;
-    }
-  }, [imgSrc]);
-
   if (!candidateImage) {
     // Helpful debug output when an image is missing — do not substitute a placeholder
     // eslint-disable-next-line no-console
@@ -84,33 +69,18 @@ export const TreeCard = ({ tree, onClick, selected }: TreeCardProps) => {
         <CardContent className="space-y-3">
           {/* Tree Image */}
           <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-[#0F5F3A]/10 to-[#166C47]/10">
-            {/* Skeleton while image loads */}
-            {imgSrc && !imgLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-3/4 h-3/4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-md" />
-              </div>
-            )}
-
             {imgSrc ? (
               <img
                 src={imgSrc}
-                loading="lazy"
                 alt={`Tree ${tree.id}`}
                 data-original-src={tree.image || ''}
                 className="w-full h-full object-contain"
-                style={{ display: imgLoaded ? 'block' : 'none', background: 'none' }}
-                onLoad={() => {
-                  setImgLoaded(true);
-                  const delta = imgLoadStartRef.current ? Math.round(performance.now() - imgLoadStartRef.current) : null;
-                  // eslint-disable-next-line no-console
-                  console.debug('[IPFS] image loaded tree', { id: tree.id, src: imgSrc, timeMs: delta });
-                }}
+                style={{ display: 'block', background: 'none' }}
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
               <div className="w-full h-full" aria-hidden />
             )}
-
             {tree.rarity === 'Legendary' && (
               <div className="absolute inset-0 bg-gradient-to-t from-[#E2B13C]/30 to-transparent animate-pulse pointer-events-none" />
             )}

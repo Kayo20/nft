@@ -167,19 +167,12 @@ export default function Fusion() {
                       const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : null;
                       if (imgSrc) {
                         return (
-                          <div className="relative">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-3/4 h-3/4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-md" />
-                            </div>
-                            <img
-                              src={imgSrc}
-                              loading="lazy"
-                              alt={`Tree ${selectedSlots[index]!.id}`}
-                              className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain"
-                              onLoad={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'block'; }}
-                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                            />
-                          </div>
+                          <img
+                            src={imgSrc}
+                            alt={`Tree ${selectedSlots[index]!.id}`}
+                            className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                          />
                         );
                       }
                       return <div className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56" aria-hidden />;
