@@ -68,3 +68,72 @@ export async function resolveIpfsMetadata(uriOrCid: string, gateways: string[] =
 
   return null;
 }
+
+export async function listIpfsFolder(uriOrCid: string, gateways: string[] = DEFAULT_GATEWAYS) {
+  if (!uriOrCid) return [];
+  const raw = String(uriOrCid).trim();
+  const normalized = raw.replace(/^ipfs:\/\//i, '').replace(/^\/+/, '').replace(/\/+$/, '');
+
+  async function tryUrl(url: string) {
+    try {
+      const res = await timeoutFetch(url);
+      if (!res.ok) return null;
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        const json = await res.json();
+        const items: string[] = [];
+        if (Array.isArray(json.images)) {
+          json.images.forEach((i: any) => items.push(i.url || i));
+        } else if (Array.isArray(json.files)) {
+          json.files.forEach((f: any) => items.push(f.url || f.name || f));
+        }
+        return items.length ? items : null;
+      }
+
+      if (ct.includes('text/html')) {
+        const text = await res.text();
+        const hrefs: string[] = [];
+        const re = /href=["']([^"']+)["']/gi;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(text)) !== null) {
+          hrefs.push(m[1]);
+        }
+        const imgs = hrefs.filter(h => /\.(png|jpe?g|webp|gif|svg)$/i.test(h));
+        const urls = imgs.map(h => {
+          if (/^https?:\/\//i.test(h)) return h;
+          if (h.startsWith('/')) {
+            const origin = new URL(url).origin;
+            return origin + h;
+          }
+          return url.replace(/\/+$/, '') + '/' + h.replace(/^\/+/, '');
+        });
+        return urls.length ? urls : null;
+      }
+
+      if (ct.startsWith('image/')) return [url];
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // If it's a full http(s) URL, try direct
+  if (/^https?:\/\//i.test(raw)) {
+    for (const g of gateways) {
+      const r = await tryUrl(raw);
+      if (r && r.length) return r;
+    }
+  }
+
+  // Try gateways with/without trailing slash
+  for (const g of gateways) {
+    const url = `${g}/${normalized}`;
+    const r = await tryUrl(url);
+    if (r && r.length) return r;
+    const url2 = `${g}/${normalized}/`;
+    const r2 = await tryUrl(url2);
+    if (r2 && r2.length) return r2;
+  }
+
+  return [];
+}

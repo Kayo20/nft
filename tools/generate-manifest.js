@@ -49,6 +49,41 @@ const rarities = ['uncommon', 'rare', 'epic', 'legendary'];
   try {
     const manifest = [];
 
+    // If IPFS root is configured, prefer it to generate the manifest
+    const IPFS_ROOT = process.env.IPFS_IMAGES_ROOT || process.env.VITE_IPFS_IMAGES_ROOT || '';
+    if (IPFS_ROOT) {
+      const ipfsLib = await import('./../src/lib/ipfs');
+      for (const r of rarities) {
+        const candidates = [`${IPFS_ROOT.replace(/\/$/, '')}/${r}`, `${IPFS_ROOT.replace(/\/$/, '')}/${r.charAt(0).toUpperCase()+r.slice(1)}`];
+        for (const candidate of candidates) {
+          console.log(`Trying IPFS folder (preferred): ${candidate}`);
+          const urls = await ipfsLib.listIpfsFolder(candidate);
+          if (urls && urls.length) {
+            for (const u of urls) {
+              manifest.push({ rarity: r, name: u.split('/').pop(), url: u });
+            }
+            break;
+          }
+        }
+      }
+
+      // If we found items, upload and exit
+      if (manifest.length) {
+        const payload = { generatedAt: new Date().toISOString(), images: manifest };
+        const json = JSON.stringify(payload, null, 2);
+        const { error: upErr } = await supabase.storage.from(BUCKET).upload('manifest.json', Buffer.from(json), { contentType: 'application/json', upsert: true });
+        if (upErr) {
+          console.error('Failed to upload manifest.json:', upErr.message || upErr);
+          process.exit(1);
+        }
+        console.log('manifest.json uploaded successfully (from IPFS root). Public URL:');
+        console.log(`${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/manifest.json`);
+        process.exit(0);
+      }
+
+      console.log('IPFS root provided but no files found; falling back to Supabase storage listing.');
+    }
+
     for (const r of rarities) {
       const { data, error } = await supabase.storage.from(BUCKET).list(r, { limit: 100 });
       if (error) {

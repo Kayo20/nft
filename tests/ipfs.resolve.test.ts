@@ -34,4 +34,12 @@ describe('resolveIpfsMetadata', () => {
     const b = await resolveIpfsMetadata('QmCacheCid');
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
+
+  it('lists images from an IPFS html directory listing', async () => {
+    const html = `<html><body><a href="image1.png">image1.png</a><a href="/ipfs/QmCid/Uncommon/image2.jpg">image2.jpg</a></body></html>`;
+    (global.fetch as any).mockResolvedValueOnce({ ok: true, headers: { get: () => 'text/html' }, text: async () => html });
+    const { listIpfsFolder } = await import('../src/lib/ipfs');
+    const res = await listIpfsFolder('QmSomeFolder/Uncommon', ['https://gateway.test/ipfs']);
+    expect(res).toEqual(expect.arrayContaining([expect.stringContaining('image1.png'), expect.stringContaining('image2.jpg')]));
+  });
 });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NFTTree } from '@/types';
-import { getNFTs } from '@/lib/api';
+
 import { useNftManifest } from './useNftManifest';
 
 export const useNFTs = (address: string | null) => {
@@ -17,20 +17,11 @@ export const useNFTs = (address: string | null) => {
     setError(null);
 
     try {
-      const data = await getNFTs(address);
+      const api = await import('@/lib/api');
+      const data = await api.getNFTs(address);
 
       // If manifest exists, enrich NFTs missing images
-      const enriched = (data || []).map((n: NFTTree) => {
-        const copy = { ...n } as NFTTree;
-        if (!copy.image || copy.image === null || copy.image === '') {
-          const rarity = (copy.rarity || 'uncommon').toLowerCase();
-          const candidates = manifestImages.filter(m => m.rarity === rarity).map(m => m.url);
-          if (candidates.length > 0) {
-            copy.image = candidates[Math.floor(Math.random() * candidates.length)];
-          }
-        }
-        return copy;
-      });
+      const enriched = mapNftsWithManifest(data || [], manifestImages);
 
       setNfts(enriched);
     } catch (err) {
@@ -54,4 +45,18 @@ export const useNFTs = (address: string | null) => {
     error,
     refetch: fetchNFTs,
   };
-};
+}
+
+export function mapNftsWithManifest(nfts: any[], manifestImages: { rarity: string; name: string; url: string }[]) {
+  return (nfts || []).map((n: any) => {
+    const copy = { ...n } as any;
+    if (!copy.image || copy.image === null || copy.image === '') {
+      const rarity = (copy.rarity || 'uncommon').toLowerCase();
+      const candidates = (manifestImages || []).filter(m => m.rarity === rarity).map(m => m.url);
+      if (candidates.length > 0) {
+        copy.image = candidates[Math.floor(Math.random() * candidates.length)];
+      }
+    }
+    return copy;
+  });
+}

@@ -13,7 +13,7 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     from: (table: string) => {
       if (table === 'users') return { select: () => ({ eq: () => ({ single: async () => ({ data: { id: 'uuid-123' } }) }) }) };
-      if (table === 'inventories') return { select: () => ({ eq: () => ({ in: async () => ({ data: [{ item_id: 'water', qty: 1 }, { item_id: 'fertilizer', qty: 1 }] }) }) }) };
+      if (table === 'inventories') return { select: () => ({ eq: () => ({ data: [{ item_id: 'water', qty: 1 }, { item_id: 'fertilizer', qty: 1 }] }) }) };
       return { select: () => ({ eq: () => ({ single: async () => ({ data: null }) }) }) };
     }
   })

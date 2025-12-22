@@ -72,6 +72,11 @@ export const handler: Handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'tx verification error' }) };
     }
 
+    // Resolve user UUID by wallet address and use user_id in inventories/transactions
+    const { data: userRow, error: userErr } = await supabase.from('users').select('id, wallet_address').eq('wallet_address', address).single();
+    if (userErr || !userRow) return { statusCode: 500, headers, body: JSON.stringify({ error: 'user lookup failed' }) };
+    const userId = userRow.id;
+
     // Create transaction row (include on-chain tx hash and fee information)
     const feeAmount = (await import('../../src/lib/constants')).TRANSACTION_FEE_TF;
     const { data: tx, error: txErr } = await supabase
@@ -80,12 +85,6 @@ export const handler: Handler = async (event) => {
       .select()
       .single();
     if (txErr) throw txErr;
-
-    // Upsert inventory
-    // Resolve user UUID by wallet address and use user_id in inventories/transactions
-    const { data: userRow, error: userErr } = await supabase.from('users').select('id, wallet_address').eq('wallet_address', address).single();
-    if (userErr || !userRow) return { statusCode: 500, headers, body: JSON.stringify({ error: 'user lookup failed' }) };
-    const userId = userRow.id;
 
     const { data: inv } = await supabase.from("inventories").select("id, qty").eq("user_id", userId).eq("item_id", itemId).single();
     if (inv && inv.id) {
