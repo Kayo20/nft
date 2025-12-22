@@ -285,6 +285,12 @@ export default function Dashboard() {
             </motion.div>
           )}
 
+          <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <TreePine className="w-5 h-5 text-[#0F5F3A] dark:text-[#22C55E]" />
+                Land Overview (9 Slots)
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <LandSlots trees={landSlots} onSlotClick={handleSlotClick} onStartFarming={handleStartFarming} transferInProgress={transferInProgress} transferAction={transferAction} verifyingTx={verifyingTx} />

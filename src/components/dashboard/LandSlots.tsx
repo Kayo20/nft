@@ -5,11 +5,19 @@ import { Badge } from '@/components/ui/badge';
 import { RARITY_COLORS } from '@/lib/constants';
 import { isFarmingActive, getTimeUntilFarmingStops } from '@/lib/farmingHelper';
 import { useEffect, useState } from 'react';
+
+interface LandSlotsProps {
+  trees: NFTTree[];
   onSlotClick: (slotIndex: number) => void;
   onAddTree?: (slotIndex: number) => void;
+  onStartFarming?: (slotIndex: number, itemIds: ('water'|'fertilizer'|'antiBug')[]) => Promise<void>;
+  transferInProgress?: boolean;
+  transferAction?: string | null;
+  verifyingTx?: boolean;
   slots?: number; // default 9
   className?: string;
 }
+
 
 export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, transferInProgress = false, transferAction = null, verifyingTx = false, slots = 9, className = '' }: LandSlotsProps) => {
   // Track selected items per slot
@@ -162,7 +170,8 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, trans
               )}
             </CardContent>
           </Card>
-        ))}
+        );
+        })}
       </div>
       
       {/* Festive decorations */}
