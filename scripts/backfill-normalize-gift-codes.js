@@ -63,9 +63,12 @@ Normalized: ${norm}
 
   // Normalize code values first
   for (const r of codes) {
-    const norm = (String(r.code || '').trim()).toUpperCase();
+    // Normalize to uppercase and strip non-alphanumeric characters for normalized_code
+    const raw = String(r.code || '').trim();
+    const norm = raw.toUpperCase();
+    const normAlnum = norm.replace(/[^A-Z0-9]/g, '');
     try {
-      const { error: upErr } = await supabase.from('gift_codes').update({ code: norm, normalized_code: norm }).eq('id', r.id);
+      const { error: upErr } = await supabase.from('gift_codes').update({ code: norm, normalized_code: normAlnum }).eq('id', r.id);
       if (upErr) console.warn(`Failed to update id=${r.id}:`, upErr.message || upErr);
     } catch (e) {
       console.warn('Update exception for id=', r.id, e.message || e);

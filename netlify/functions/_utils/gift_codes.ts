@@ -35,48 +35,75 @@ const IN_MEMORY: Record<string, GiftRecord> = (() => {
 })();
 
 export async function getCodeRecord(code: string): Promise<GiftRecord | null> {
-  const trimmed = (code || '').trim();
-  const normalized = trimmed.toUpperCase();
+  const raw = (code || '').trim();
+  const normalized = raw.toUpperCase();
+  const normalizedAlnum = normalized.replace(/[^A-Z0-9]/g, '');
   if (!supabase && REQUIRE_SUPABASE) {
     throw new Error('Gift codes require Supabase in production');
   }
   if (supabase) {
     // Prefer normalized_code (added by migration) for exact lookups
+    // Try both the raw normalized and an alphanumeric-only normalized (strips dashes/spaces)
     let query = await supabase.from('gift_codes').select('*').eq('normalized_code', normalized).limit(1).single();
+    if (!(query && query.data) && !query?.error) {
+      query = await supabase.from('gift_codes').select('*').eq('normalized_code', normalizedAlnum).limit(1).single();
+    }
 
     // Fallbacks for legacy rows: exact uppercased code, then case-insensitive match on trimmed
     if (!(query && query.data) && !query?.error) {
       query = await supabase.from('gift_codes').select('*').eq('code', normalized).limit(1).single();
     }
     if (!(query && query.data) && !query?.error) {
-      query = await supabase.from('gift_codes').select('*').ilike('code', trimmed).limit(1).single();
+      // try a lenient match stripping non-alnum characters from stored code via ilike on normalized-ish pattern
+      const pattern = `%${raw.replace(/[^A-Za-z0-9]/g, '')}%`;
+      query = await supabase.from('gift_codes').select('*').ilike('code', pattern).limit(1).single();
     }
 
     const { data, error } = query || { data: null, error: null };
     if (error || !data) return null;
     return { id: data.id, code: data.code, claimed: data.claimed, claimedBy: data.claimed_by, claimedAt: data.claimed_at } as GiftRecord;
   }
-  return IN_MEMORY[normalized] || null;
+  // In-memory lookup: support both raw and alnum
+  return IN_MEMORY[raw] || IN_MEMORY[normalized] || IN_MEMORY[normalizedAlnum] || null;
 }
 
 export async function claimCode(code: string, address: string, metadata: any = null): Promise<{ success: boolean; message: string }> {
-  const normalized = code.toUpperCase();
+  const raw = (code || '').trim();
+  const normalized = raw.toUpperCase();
+  const normalizedAlnum = normalized.replace(/[^A-Z0-9]/g, '');
   if (!supabase && REQUIRE_SUPABASE) {
     throw new Error('Gift codes require Supabase in production');
   }
   if (supabase) {
-    // Find existing record with same tolerant lookup as getCodeRecord
-    let query = await supabase.from('gift_codes').select('*').eq('code', normalized).limit(1).single();
-    if (!(query && query.data) && !query.error) {
-      query = await supabase.from('gift_codes').select('*').ilike('code', (code || '').trim()).limit(1).single();
+    // Find existing record with tolerant lookup
+    let query = await supabase.from('gift_codes').select('*').eq('normalized_code', normalized).limit(1).single();
+    if (!(query && query.data) && !query?.error) {
+      query = await supabase.from('gift_codes').select('*').eq('normalized_code', normalizedAlnum).limit(1).single();
     }
-    const { data: existing } = query || { data: null };
+    if (!(query && query.data) && !query?.error) {
+      query = await supabase.from('gift_codes').select('*').eq('code', normalized).limit(1).single();
+    }
+    if (!(query && query.data) && !query?.error) {
+      query = await supabase.from('gift_codes').select('*').ilike('code', raw).limit(1).single();
+    }
+
+    const { data: existing, error: qErr } = query || { data: null, error: null };
+    if (qErr) {
+      console.warn('claimCode query error', qErr);
+      return { success: false, message: 'Invalid gift code' };
+    }
     if (!existing) return { success: false, message: 'Invalid gift code' };
     if (existing.claimed) return { success: false, message: 'This gift code has already been claimed' };
 
-    // Use id for update to avoid case/collation mismatches
-    const { error: updErr } = await supabase.from('gift_codes').update({ claimed: true, claimed_by: address, claimed_at: new Date().toISOString() }).eq('id', existing.id);
-    if (updErr) return { success: false, message: 'Failed to claim code' };
+    // Use id for update to avoid case/collation mismatches; also update normalized_code if missing
+    const updates: any = { claimed: true, claimed_by: address, claimed_at: new Date().toISOString() };
+    if (!existing.normalized_code || existing.normalized_code !== normalizedAlnum) updates.normalized_code = normalizedAlnum;
+
+    const { error: updErr } = await supabase.from('gift_codes').update(updates).eq('id', existing.id);
+    if (updErr) {
+      console.error('claimCode update failed', updErr);
+      return { success: false, message: 'Failed to claim code' };
+    }
 
     try {
       await supabase.from('gift_code_claims').insert([{ gift_code_id: existing.id, claimer: address, metadata }]);
