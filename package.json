@@ -20,6 +20,7 @@
     "list-users": "node scripts/list-users.js",
     "e2e-auth-test": "node scripts/e2e-auth-test.js",
     "pin-nft-images-pinata": "node tools/pin-nft-images-pinata-http.js",
+    "backfill:create-default-lands": "node tools/backfill-create-default-lands.js",
     "preview": "vite preview"
   },
   "dependencies": {

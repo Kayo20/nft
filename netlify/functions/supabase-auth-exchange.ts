@@ -64,6 +64,22 @@ export const handler: Handler = async (event) => {
 
     // Fallback: return user id so client can continue using server-side protected endpoints
     const { data: userRow } = await supabase.from('users').select('id, wallet_address').eq('wallet_address', address).single();
+
+    // Ensure default land exists for this user (idempotent)
+    try {
+      const defaultLand = { owner: address, season: 0, name: 'Land 1', slots: 9 };
+      await supabase.from('lands').upsert(defaultLand, { onConflict: ['owner'] }).select().catch(() => ({ data: null }));
+      const { data: land } = await supabase.from('lands').select('*').eq('owner', address).single().catch(() => ({ data: null }));
+      if (land && land.id) {
+        const slots = land.slots || 9;
+        const slotInserts = [];
+        for (let i = 0; i < slots; i++) slotInserts.push({ landId: land.id, slotIndex: i });
+        await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['landId', 'slotIndex'] }).select().catch(() => ({ data: null }));
+      }
+    } catch (e) {
+      console.warn('supabase-auth-exchange: failed to ensure default land for user', e?.message || e);
+    }
+
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, user: userRow, note: 'No client token issued; use server endpoints for protected operations' }) };
   } catch (err: any) {
     console.error('supabase-auth-exchange error', err);

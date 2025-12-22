@@ -327,9 +327,14 @@ export default function Inventory() {
                   return (
                     <div key={key} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
                       <div className="flex items-center gap-3">
-                        {item?.image ? (
-                          <img src={item.image} alt={item.name} className="w-10 h-10 object-contain rounded" />
-                        ) : (
+                        {item?.image ? (() => {
+                          const PLACEHOLDER = new URL('../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
+                          const candidate = item.image;
+                          const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : PLACEHOLDER;
+                          return (
+                            <img src={imgSrc} alt={item.name} className="w-10 h-10 object-contain rounded" onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }} />
+                          );
+                        })() : (
                           <div className="w-10 h-10 flex items-center justify-center text-xl">{item?.icon}</div>
                         )}
                         <span className="text-sm text-gray-900 dark:text-white">{item?.name || key}</span>

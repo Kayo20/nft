@@ -21,8 +21,8 @@ export const ChestOpener = () => {
     try {
       const result = await openChest(useGiftCode ? giftCode : undefined);
       if (result.success && result.tree) {
-        setNewTree(result.tree);
-        setShowResult(true);
+        setNewTree(result.tree);        // Notify listeners (e.g., useNFTs) to refetch collection
+        try { (window as any).dispatchEvent(new CustomEvent('nft-updated')); } catch (e) { /* noop */ }        setShowResult(true);
         if (useGiftCode) {
           setGiftCode('');
         }
@@ -80,7 +80,18 @@ export const ChestOpener = () => {
           {newTree && (
             <div className="text-center space-y-4 py-4">
               <div className="w-32 h-32 mx-auto rounded-lg overflow-hidden">
-                <img src={newTree.image} alt="New Tree" className="w-full h-full object-cover" />
+                {(() => {
+                  const PLACEHOLDER = new URL('../../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
+                  const imgSrc = (newTree.image && String(newTree.image).trim()) ? String(newTree.image) : PLACEHOLDER;
+                  return (
+                    <img
+                      src={imgSrc}
+                      alt="New Tree"
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
+                    />
+                  );
+                })()}
               </div>
               <Badge
                 className="text-lg px-4 py-1"

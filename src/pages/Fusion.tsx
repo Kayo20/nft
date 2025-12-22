@@ -161,13 +161,19 @@ export default function Fusion() {
                 <div className="grid grid-cols-3 gap-4 items-center justify-center">
                   {[0, 1, 2].map((index) => (
                     <div key={index} className={`flex items-center justify-center bg-transparent p-2`}>
-                      {selectedSlots[index] ? (
-                        <img
-                          src={selectedSlots[index]!.image}
-                          alt={`Tree ${selectedSlots[index]!.id}`}
-                          className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain"
-                        />
-                      ) : (
+                      {selectedSlots[index] ? (() => {
+                        const PLACEHOLDER = new URL('../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
+                        const candidate = selectedSlots[index] && selectedSlots[index]!.image;
+                        const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : PLACEHOLDER;
+                        return (
+                          <img
+                            src={imgSrc}
+                            alt={`Tree ${selectedSlots[index]!.id}`}
+                            className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
+                          />
+                        );
+                      })() : (
                         <button
                           onClick={() => setChooserIndex(index)}
                           className="flex flex-col items-center justify-center w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:border-[#0F5F3A] transition-colors"
@@ -318,11 +324,19 @@ export default function Fusion() {
           {fusionResult && (
             <div className="space-y-4 py-4">
               <div className="w-full flex items-center justify-center">
-                <img
-                  src={fusionResult.image}
-                  alt={`Tree ${fusionResult.id}`}
-                  className="w-48 h-48 object-contain"
-                />
+                {(() => {
+                  const PLACEHOLDER = new URL('../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
+                  const candidate = fusionResult && fusionResult.image;
+                  const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : PLACEHOLDER;
+                  return (
+                    <img
+                      src={imgSrc}
+                      alt={`Tree ${fusionResult.id}`}
+                      className="w-48 h-48 object-contain"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
+                    />
+                  );
+                })()}
               </div>
               <div className="text-center space-y-2">
                 <p className="text-2xl font-bold text-[#0F5F3A] dark:text-[#22C55E]">{fusionResult.rarity} Tree</p>

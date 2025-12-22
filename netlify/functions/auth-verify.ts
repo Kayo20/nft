@@ -216,6 +216,31 @@ export const handler: Handler = async (event) => {
         const upsertRes = await supabase.from("users").upsert({ wallet_address: addr, profile }, { onConflict: ["wallet_address"] });
         console.log('auth-verify: upsert result', { status: upsertRes.status, error: upsertRes.error, data: (upsertRes.data && upsertRes.data.length) ? upsertRes.data[0] : null });
 
+        // Ensure user has a default land (idempotent)
+        try {
+          const defaultLand = { owner: addr, season: 0, name: 'Land 1', slots: 9 };
+          // Use upsert on owner to avoid duplicate inserts
+          const { data: landUpserted } = await supabase.from('lands').upsert(defaultLand, { onConflict: ['owner'] }).select().catch(() => ({ data: null }));
+          let landRow = (landUpserted && landUpserted.length) ? landUpserted[0] : null;
+          if (!landRow) {
+            // Fallback: fetch land by owner
+            const { data: found } = await supabase.from('lands').select('*').eq('owner', addr).single().catch(() => ({ data: null }));
+            landRow = found;
+          }
+
+          if (landRow && landRow.id) {
+            const slots = landRow.slots || 9;
+            const slotInserts: any[] = [];
+            for (let i = 0; i < slots; i++) {
+              slotInserts.push({ landId: landRow.id, slotIndex: i });
+            }
+            // Upsert slots to ensure they exist (on conflict landId,slotIndex do nothing)
+            await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['landId', 'slotIndex'] }).select().catch(() => ({ data: null }));
+          }
+        } catch (e) {
+          console.warn('auth-verify: failed to ensure default land for user', e?.message || e);
+        }
+
         // Clear nonce from Supabase
         const delRes = await supabase.from("nonces").delete().eq("address", addr);
         console.log('auth-verify: cleared nonce result', { status: delRes.status, error: delRes.error });

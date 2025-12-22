@@ -446,14 +446,20 @@ export default function Landing() {
               >
                 <CardHeader className="w-full flex flex-col items-center">
                   <div className="w-full flex justify-center mb-4">
-                    {rarityTrees[index] && (
-                      <img
-                        src={rarityTrees[index].image}
-                        alt={rarity.name + ' NFT Tree'}
-                        className="w-72 h-72 object-contain"
-                        style={{ display: 'block', background: 'none' }}
-                      />
-                    )}
+                    {rarityTrees[index] && (() => {
+                      const PLACEHOLDER = new URL('../../assets/images/trees/placeholder-tree.svg', import.meta.url).href;
+                      const candidate = rarityTrees[index] && rarityTrees[index].image;
+                      const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : PLACEHOLDER;
+                      return (
+                        <img
+                          src={imgSrc}
+                          alt={rarity.name + ' NFT Tree'}
+                          className="w-72 h-72 object-contain"
+                          style={{ display: 'block', background: 'none' }}
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
+                        />
+                      );
+                    })()}
                   </div>
                   <CardTitle className="text-xl" style={{ color: rarity.color }}>
                     {rarity.name}

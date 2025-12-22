@@ -47,10 +47,11 @@ export function useNFTs(ownerAddress?: string) {
             imageUrl = resolvedMeta.image;
           }
 
-          // Attach the best metadata and imageUrl for the UI
+          // Attach the best metadata and resolved image for the UI
           const finalMeta = resolvedMeta || (typeof meta === 'object' ? meta : null);
+          const finalImage = imageUrl || n.image_url || (finalMeta && finalMeta.image) || null;
 
-          return { ...n, metadata: finalMeta, image_url_resolved: imageUrl };
+          return { ...n, metadata: finalMeta, image: finalImage, image_url_resolved: imageUrl };
         }));
         if (!mounted) return;
         setNfts(resolved);
