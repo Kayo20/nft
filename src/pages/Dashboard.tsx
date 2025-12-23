@@ -51,9 +51,10 @@ class DashboardErrorBoundary extends React.Component<{ children: React.ReactNode
 
 export default function Dashboard() {
   const { wallet } = useWallet();
-  const demoAddress = wallet.address || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
-  const { nfts: allNFTs, isLoading } = useNFTs(demoAddress);
-  const { inventory, refetch: refetchItems } = useItems(demoAddress);
+  const demoAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
+  const displayAddress = wallet.address || demoAddress;
+  const { nfts: allNFTs, isLoading } = useNFTs(displayAddress);
+  const { inventory, refetch: refetchItems } = useItems(displayAddress);
   const [tfBalance, setTfBalance] = useState(0);
   const [bnbBalance, setBnbBalance] = useState(0);
 
@@ -220,7 +221,6 @@ export default function Dashboard() {
 
   const totalYield = landSlots.reduce((sum, nft) => sum + (nft?.daily_yield || nft?.dailyYield || 0), 0);
   const plantedTrees = landSlots.filter(nft => nft).length;
-  const displayAddress = wallet.address || demoAddress;
 
   if (isLoading || !allNFTs) {
     return (
