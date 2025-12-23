@@ -1,5 +1,8 @@
-// Allow an optional custom gateway from environment variables (Vite injects these into process.env too)
-const CUSTOM_GATEWAY = (process.env.VITE_IPFS_GATEWAY || process.env.IPFS_GATEWAY || process.env.VITE_IPFS_GATEWAY || '').replace(/\/$/, '');
+// Use Vite's import.meta.env in the browser, but fall back to process.env if present (SSR/tests)
+const env: Record<string, any> = (typeof import.meta !== 'undefined' && (import.meta as any).env) || (typeof process !== 'undefined' && (process as any).env) || {};
+
+// Allow an optional custom gateway from environment variables
+const CUSTOM_GATEWAY = (env.VITE_IPFS_GATEWAY || env.IPFS_GATEWAY || '').replace(/\/$/, '');
 const DEFAULT_GATEWAYS = [
   (CUSTOM_GATEWAY || 'https://ipfs.io/ipfs'),
   'https://cloudflare-ipfs.com/ipfs',
@@ -10,9 +13,9 @@ const CACHE_KEY_PREFIX = 'ipfs_meta_';
 const DEFAULT_TIMEOUT = 7000; // ms
 
 // Debug toggle: set VITE_IPFS_DEBUG or IPFS_DEBUG = '1' to enable verbose resolver logging
-const IPFS_DEBUG = (process.env.VITE_IPFS_DEBUG === '1') || process.env.IPFS_DEBUG === '1';
+const IPFS_DEBUG = (env.VITE_IPFS_DEBUG === '1') || env.IPFS_DEBUG === '1';
 // Optional server proxy fallback (set VITE_USE_IPFS_PROXY=1 or IPFS_PROXY_ENABLED=1 to enable)
-const USE_IPFS_PROXY = (process.env.VITE_USE_IPFS_PROXY === '1') || (process.env.IPFS_PROXY_ENABLED === '1');
+const USE_IPFS_PROXY = (env.VITE_USE_IPFS_PROXY === '1') || (env.IPFS_PROXY_ENABLED === '1');
 
 function timeoutFetch(url: string, ms = DEFAULT_TIMEOUT) {
   const controller = new AbortController();

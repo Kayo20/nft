@@ -9,19 +9,24 @@
   <meta name="description" content="Grow your tree NFT collection, earn rewards, and celebrate the season on BNB Chain" />
   <meta name="author" content="TreeFi" />
 
+  <!-- Dev-only CSP header: use devCspPlugin to set header at the server level in development -->
+  <meta http-equiv="Content-Security-Policy" content="%VITE_CSP%">
+
   <meta property="og:title" content="TreeFi - Web3 Farming Game" />
   <meta property="og:description" content="Grow your tree NFT collection, earn rewards, and celebrate the season on BNB Chain" />
   <meta property="og:type" content="website" />
   <meta name="facebook-domain-verification" content="yoywj6ctb51qbnl5foi2kvr4dxq339" />
   
-  <!-- Meta Pixel Code -->
-  <script>
-    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)}; if(!f._fbq)f._fbq=n;
-    n.push=n;n.loaded=!0;n.version='2.0'; n.queue=[];t=b.createElement(e);
-    t.async=!0; t.src=v;s=b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t,s)
-    }(window, document,'script', 'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '850896744507378'); fbq('track', 'PageView');
+  <!-- Meta Pixel Code (production-only; disabled in dev to avoid interfering with HMR) -->
+  <script type="module">
+    if (!import.meta.env.DEV) {
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)}; if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0'; n.queue=[];t=b.createElement(e);
+      t.async=!0; t.src=v;s=b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t,s)
+      }(window, document,'script', 'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '850896744507378'); fbq('track', 'PageView');
+    }
   </script>
   <!-- End Meta Pixel Code -->
 

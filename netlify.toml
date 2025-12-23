@@ -22,6 +22,71 @@
   status = 200
   force = true
 [[redirects]]
+  # Ensure Vite HMR and module assets are proxied to the Vite dev server
+  # so Netlify Dev returns the correct JS MIME types for module scripts.
+  from = "/@vite/*"
+  to = "http://localhost:5175/@vite/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/src/*"
+  to = "http://localhost:5175/src/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/node_modules/.vite/*"
+  to = "http://localhost:5175/node_modules/.vite/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  # Proxy Vite internal virtual paths & tool endpoints to the running Vite server
+  from = "/@fs/*"
+  to = "http://localhost:5175/@fs/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/@id/*"
+  to = "http://localhost:5175/@id/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/__vite_ping"
+  to = "http://localhost:5175/__vite_ping"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/__open-in-editor"
+  to = "http://localhost:5175/__open-in-editor"
+  status = 200
+  force = true
+
+[[redirects]]
+  # Proxy react-refresh virtual paths to Vite dev server (ensures proper MIME)
+  from = "/@react-refresh"
+  to = "http://localhost:5175/@react-refresh"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/@react-refresh/*"
+  to = "http://localhost:5175/@react-refresh/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  # Proxy Vite environment module (some setups use /env.mjs)
+  from = "/env.mjs"
+  to = "http://localhost:5175/env.mjs"
+  status = 200
+  force = true
+
+[[redirects]]
   # SPA catch-all: redirect all routes to index.html for React Router to handle
   from = "/*"
   to = "/index.html"
