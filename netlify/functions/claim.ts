@@ -4,12 +4,7 @@ import { verifySession, corsHeaders, securityHeaders } from "./_utils/auth";
 import { createTransaction as mockCreateTransaction } from "./_utils/mock_db";
 
 // TreeFi Constants (duplicated for backend)
-const DAILY_REWARDS: Record<string, number> = {
-  Uncommon: 0.5,
-  Rare: 2,
-  Epic: 8,
-  Legendary: 15,
-};
+import { DAILY_REWARDS } from '../../src/lib/constants';
 
 const CLAIM_FEE_SCHEDULE = [
   { day: 1, fee: 50 },
@@ -50,12 +45,57 @@ function getCurrentSeasonDay(currentTime: number): number | null {
 /**
  * Get claim fee percentage based on day of Season 0
  */
-function getClaimFeePercentage(dayNumber: number | null): number {
+export function getClaimFeePercentage(dayNumber: number | null): number {
   if (dayNumber === null) return 0; // Season ended, no fee
   if (dayNumber < 1 || dayNumber > 10) return 0;
   const schedule = CLAIM_FEE_SCHEDULE;
   const dayEntry = schedule.find(s => s.day === dayNumber);
   return dayEntry ? dayEntry.fee : 0;
+}
+
+/**
+ * Compute claim amounts and time window for a given farming state
+ */
+export function computeClaim(farmingState: any, currentTime = Date.now(), feePercentage = 0) {
+  const activeItems = farmingState.active_items || [];
+  if (!activeItems || activeItems.length !== 3) {
+    return { ok: false, error: 'farming not active - all 3 items must be active' };
+  }
+
+  const now = currentTime;
+  const expiries = activeItems.map((i: any) => Number(i.expiresAt || i.expires_at || 0));
+  const earliestExpiry = Math.min(...expiries);
+  if (earliestExpiry <= now) {
+    return { ok: false, error: 'farming not active - items expired' };
+  }
+
+  const dailyReward = (DAILY_REWARDS as any)[farmingState.nft_rarity] || 0;
+  const lastClaimed = farmingState.last_claimed_at ? new Date(farmingState.last_claimed_at).getTime() : new Date(farmingState.farming_started || Date.now()).getTime();
+  const effectiveEnd = Math.min(now, earliestExpiry);
+  const effectiveSeconds = Math.max(0, (effectiveEnd - lastClaimed) / 1000);
+  const secondsPerDay = 24 * 60 * 60;
+  const daysSinceLastClaim = effectiveSeconds / secondsPerDay;
+
+  if (effectiveSeconds <= 0) {
+    return { ok: false, error: 'no rewards available to claim' };
+  }
+
+  const grossRewards = (dailyReward * daysSinceLastClaim);
+  const fee = (grossRewards * feePercentage) / 100;
+  const netRewards = Math.max(0, grossRewards - fee);
+
+  return {
+    ok: true,
+    dailyReward,
+    earliestExpiry,
+    lastClaimed,
+    effectiveEnd,
+    effectiveSeconds,
+    daysSinceLastClaim,
+    grossRewards,
+    fee,
+    netRewards,
+  };
 }
 
 export const handler: Handler = async (event: any) => {
@@ -147,20 +187,13 @@ export const handler: Handler = async (event: any) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "farming state not found" }) };
     }
 
-    // Check if farming is active
-    if (!farmingState.is_farming_active) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "farming not active - all 3 items must be active" }) };
+    // Use computeClaim helper to validate and compute reward amounts
+    const claimResult = computeClaim(farmingState, currentTime, feePercentage);
+    if (!claimResult.ok) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: claimResult.error }) };
     }
 
-    // Calculate rewards
-    const dailyReward = DAILY_REWARDS[farmingState.nft_rarity as keyof typeof DAILY_REWARDS] || 0;
-    const lastClaimed = new Date(farmingState.last_claimed_at).getTime();
-    const daysSinceLastClaim = (currentTime - lastClaimed) / (24 * 60 * 60 * 1000);
-    const grossRewards = dailyReward * daysSinceLastClaim;
-
-    // Apply fee
-    const fee = (grossRewards * feePercentage) / 100;
-    const netRewards = Math.max(0, grossRewards - fee);
+    const { dailyReward, grossRewards, fee, netRewards, daysSinceLastClaim, effectiveEnd, earliestExpiry } = claimResult;
 
     // Log claim to history
     const { data: tx, error: txErr } = await supabase
@@ -168,23 +201,24 @@ export const handler: Handler = async (event: any) => {
       .insert([{
         user_id: farmingState.user_id,
         type: "claim",
-        amount: netRewards,
+        amount: Math.floor(netRewards * 100) / 100,
         metadata: {
           nftId,
           seasonDay: currentSeasonDay,
           feePercentage,
           grossRewards,
         },
+        created_at: new Date().toISOString(),
       }])
       .select()
       .single();
 
     if (txErr) throw txErr;
 
-    // Update last claimed time
+    // Update last claimed time to the effectiveEnd so future claims won't double-count
     await supabase
       .from("farming_state")
-      .update({ last_claimed_at: new Date().toISOString() })
+      .update({ last_claimed_at: new Date(effectiveEnd).toISOString(), updated_at: new Date().toISOString(), is_farming_active: earliestExpiry > Date.now() })
       .eq("id", farmingState.id);
 
     return {

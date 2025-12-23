@@ -162,6 +162,7 @@ export const handler: Handler = async (event: any) => {
         nft_id: nftId,
         nft_rarity: nft.rarity,
         farming_started: new Date().toISOString(),
+        last_claimed_at: new Date().toISOString(),
         active_items: activeItems,
         is_farming_active: true,
         updated_at: new Date().toISOString(),

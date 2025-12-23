@@ -145,7 +145,7 @@ export const handler: Handler = async (event) => {
           owner_address: address,
           rarity: newRarity,
           power: newPower,
-          daily_yield: 0,
+          daily_yield: (await import('../../src/lib/constants')).DAILY_REWARDS[newRarity as any] || 0,
           health: 100,
           image_url: nfts[0].image_url || null,
           metadata: { fused_from: nftIds },

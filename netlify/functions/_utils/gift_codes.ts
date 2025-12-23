@@ -105,10 +105,20 @@ export async function claimCode(code: string, address: string, metadata: any = n
       return { success: false, message: 'Failed to claim code' };
     }
 
+    // Log the claim in transactions (audit trail) and attempt to link to a user by wallet address
     try {
-      await supabase.from('gift_code_claims').insert([{ gift_code_id: existing.id, claimer: address, metadata }]);
+      const userRes = await supabase.from('users').select('id').eq('wallet_address', address).limit(1).single();
+      const userId = userRes?.data?.id || null;
+      const { error: txErr } = await supabase.from('transactions').insert([{ 
+        user_id: userId,
+        type: 'gift_claim',
+        amount: 0,
+        metadata: { gift_code_id: existing.id, claimer: address, ...(metadata || {}) },
+        created_at: new Date().toISOString(),
+      }]);
+      if (txErr) console.warn('Failed to insert gift claim transaction:', txErr.message || txErr);
     } catch (e) {
-      console.warn('Failed to log claim in gift_code_claims (table missing or error):', e?.message || e);
+      console.warn('Failed to log claim in transactions (gift claim tracking):', e?.message || e);
     }
 
     return { success: true, message: 'Code claimed' };

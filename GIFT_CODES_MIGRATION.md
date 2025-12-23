@@ -10,7 +10,7 @@ Goals
 
 Included artifacts
 - `supabase/migrations/20251221_normalize_gift_codes.sql` — migration that adds `normalized_code`, populates values, and attempts to add a unique index (only if no duplicates).
-- `scripts/backfill-normalize-gift-codes.js` — Node script that reports duplicates and (with `--fix`) will normalize codes, merge claim references into a single keeper row, and delete duplicates.
+- `scripts/backfill-normalize-gift-codes.js` — Node script that reports duplicates and (with `--fix`) will normalize codes and delete duplicates. Claim history is now recorded in `transactions` and a migration will move any existing per-claim rows into `transactions` before dropping the old table.
 - `scripts/check-gift-code.js` — quick helper to look up a code using the service role key.
 - `netlify/functions/_utils/gift_codes.ts` — updated to use `normalized_code` for lookups and to perform id-based claim updates.
 

@@ -23,10 +23,10 @@ export const RARITY_POWER: Record<Rarity, number> = {
 
 // Daily TF rewards per rarity (TreeFi Spec)
 export const DAILY_REWARDS: Record<Rarity, number> = {
-  Uncommon: 0.5,
-  Rare: 2,
-  Epic: 8,
-  Legendary: 15,
+  Uncommon: 25000,
+  Rare: 80000,
+  Epic: 240000,
+  Legendary: 800000,
 };
 
 // Season 0 configuration (10-day season)

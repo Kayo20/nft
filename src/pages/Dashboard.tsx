@@ -75,6 +75,25 @@ export default function Dashboard() {
   // Always keep a full array of 9 slots, each slot is either a tree (with slotIndex) or undefined
   const SLOT_COUNT = 9;
   const [landSlots, setLandSlots] = useState<(typeof allNFTs[0])[]>(Array(SLOT_COUNT).fill(undefined));
+  // Load user lands & slots (persisted in Supabase)
+  const { lands = [], isLoading: landsLoading, refetch: refetchLands } = useUserLands(displayAddress);
+  const currentLandId = lands.length > 0 ? lands[0].id : null;
+  const { landData, refetch: refetchLandDetails } = useLandDetails(currentLandId);
+  const { mutateAsync: updateSlot } = useUpdateLandSlot(currentLandId);
+
+  // When land details load, merge into local landSlots for UI
+  useEffect(() => {
+    if (landData && landData.slotData) {
+      // Map slotData nftIds to actual user's nft objects when available
+      setLandSlots(prev => prev.map((s, i) => {
+        const slot = landData.slotData.find((sd: any) => sd.index === i);
+        if (!slot) return s;
+        if (!slot.nftId) return undefined;
+        const nftObj = allNFTs.find(n => n.id === slot.nftId) || { id: slot.nftId, rarity: 'Uncommon', power: 0 };
+        return { ...nftObj, slotIndex: i } as any;
+      }));
+    }
+  }, [landData, allNFTs]);
 
   // Farming and transfer UI state
   const [transferInProgress, setTransferInProgress] = useState(false);
@@ -162,7 +181,7 @@ export default function Dashboard() {
     return <div className="text-center py-20 text-lg text-gray-600">Loading your dashboard...</div>;
   }
 
-  const handleSlotClick = (slotIndex: number) => {
+  const handleSlotClick = async (slotIndex: number) => {
     if (isLoading || !allNFTs || allNFTs.length === 0) {
       toast.info('NFTs are loading, please wait...');
       return;
@@ -172,7 +191,21 @@ export default function Dashboard() {
       // Find a random NFT not already in land
       const availableNFT = allNFTs.find(nft => !landSlots.some(t => t && t.id === nft.id));
       if (availableNFT) {
-        // Clone and set slotIndex
+        // Persist to Supabase if we have a land
+        if (currentLandId) {
+          try {
+            await updateSlot({ slotIndex, nftId: availableNFT.id });
+            toast.success('NFT planted to land!');
+            // the land details hook will refresh and merge slot data via effect
+            return;
+          } catch (e) {
+            console.error('Failed to update slot:', e);
+            toast.error('Failed to plant NFT to land');
+            return;
+          }
+        }
+
+        // Fallback to local-only if no land available
         const nftWithSlot = { ...availableNFT, slotIndex };
         const newSlots = [...landSlots];
         newSlots[slotIndex] = nftWithSlot;
@@ -184,7 +217,7 @@ export default function Dashboard() {
     }
   };
 
-  const totalYield = landSlots.reduce((sum, nft) => sum + (nft?.dailyYield || 0), 0);
+  const totalYield = landSlots.reduce((sum, nft) => sum + (nft?.daily_yield || nft?.dailyYield || 0), 0);
   const plantedTrees = landSlots.filter(nft => nft).length;
   const displayAddress = wallet.address || demoAddress;
 
@@ -293,7 +326,21 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <LandSlots trees={landSlots} onSlotClick={handleSlotClick} onStartFarming={handleStartFarming} transferInProgress={transferInProgress} transferAction={transferAction} verifyingTx={verifyingTx} />
+              <LandSlots trees={landSlots} onSlotClick={handleSlotClick} onStartFarming={handleStartFarming} onRemoveTree={async (slotIndex:number) => {
+                    if (!currentLandId) {
+                      // just update local
+                      setLandSlots(prev => prev.map((s,i) => i===slotIndex? undefined: s));
+                      toast.success('Tree removed from slot');
+                      return;
+                    }
+                    try {
+                      await updateSlot({ slotIndex, nftId: null });
+                      toast.success('Tree removed from slot');
+                    } catch (e) {
+                      console.error('failed to remove slot', e);
+                      toast.error('Failed to remove tree');
+                    }
+                  }} transferInProgress={transferInProgress} transferAction={transferAction} verifyingTx={verifyingTx} inventory={inventory} />
             </CardContent>
           </Card>
         </motion.div>

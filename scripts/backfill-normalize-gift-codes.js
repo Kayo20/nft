@@ -94,19 +94,8 @@ Normalized: ${norm}
     const others = sorted.slice(1);
     console.log(`Merging duplicates for ${norm}: keeper=${keeper.id}, others=${others.map(o=>o.id).join(',')}`);
 
-    // Move claims or references from others to keeper if gift_code_claims table exists
-    // We'll try to update gift_code_claims.gift_code_id => keeper.id where gift_code_id IN others
-    try {
-      const otherIds = others.map(o => o.id);
-      // Check if gift_code_claims exists by trying an update; if fails, ignore
-      const { error: claimsErr } = await supabase.from('gift_code_claims').update({ gift_code_id: keeper.id }).in('gift_code_id', otherIds);
-      if (claimsErr) {
-        // it's ok if table doesn't exist or update fails; just log
-        console.warn('Failed to update gift_code_claims references (table may not exist):', claimsErr.message || claimsErr);
-      }
-    } catch (e) {
-      console.warn('Exception while updating claims:', e.message || e);
-    }
+    // Previously we moved any 'gift_code_claims' references into keeper rows. Claim history is now stored in the central
+    // `transactions` table (migration will move existing claim rows) so no per-code claims table updates are needed here.
 
     // Optionally, keep claimed info (if any) on keeper: if keeper not claimed and one of others is, set claimed fields
     if (!keeper.claimed) {

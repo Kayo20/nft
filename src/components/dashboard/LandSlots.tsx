@@ -5,21 +5,24 @@ import { Badge } from '@/components/ui/badge';
 import { RARITY_COLORS } from '@/lib/constants';
 import { isFarmingActive, getTimeUntilFarmingStops } from '@/lib/farmingHelper';
 import { useEffect, useState } from 'react';
+import { totalSelectedCounts as tsc, availableFor as availFor, remainingFor as remFor, canStartForSlot as canStart } from './landslotsUtils';
 
 interface LandSlotsProps {
   trees: NFTTree[];
   onSlotClick: (slotIndex: number) => void;
   onAddTree?: (slotIndex: number) => void;
+  onRemoveTree?: (slotIndex: number) => void;
   onStartFarming?: (slotIndex: number, itemIds: ('water'|'fertilizer'|'antiBug')[]) => Promise<void>;
   transferInProgress?: boolean;
   transferAction?: string | null;
   verifyingTx?: boolean;
+  inventory?: { water?: number; fertilizer?: number; antiBug?: number };
   slots?: number; // default 9
   className?: string;
 }
 
 
-export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, transferInProgress = false, transferAction = null, verifyingTx = false, slots = 9, className = '' }: LandSlotsProps) => {
+export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, transferInProgress = false, transferAction = null, verifyingTx = false, inventory = { water: 0, fertilizer: 0, antiBug: 0 }, slots = 9, className = '' }: LandSlotsProps) => {
   // Track selected items per slot
   const [selectedMap, setSelectedMap] = useState<Record<number, Set<'water'|'fertilizer'|'antiBug'>>>({});
 
@@ -64,6 +67,40 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, trans
   // Use the trees array directly as slots (should be length = slots)
   const slotArr = Array.from({ length: slots }, (_, i) => trees[i]);
 
+  // Compute how many times each item is selected across all slots to respect inventory
+  // Compute how many times each item is selected across all slots to respect inventory
+  const totalSelectedCounts = { water: 0, fertilizer: 0, antiBug: 0 } as Record<string, number>;
+  Object.values(selectedMap).forEach(set => {
+    for (const s of Array.from(set)) {
+      totalSelectedCounts[s] = (totalSelectedCounts[s] || 0) + 1;
+    }
+  });
+
+  const availableFor = (item: 'water'|'fertilizer'|'antiBug', selected: string[]) => {
+    const invCount = (inventory && (inventory as any)[item]) || 0;
+    const reserved = totalSelectedCounts[item] || 0;
+    // If this slot already has it selected, allow (so user can keep/unselect)
+    if (selected.includes(item)) return true;
+    // Otherwise, only allow if there's at least one available after other reservations
+    return (invCount - reserved) > 0;
+  };
+
+  const remainingFor = (item: 'water'|'fertilizer'|'antiBug', selected: string[]) => {
+    const invCount = (inventory && (inventory as any)[item]) || 0;
+    const reserved = totalSelectedCounts[item] || 0;
+    const includeSelf = selected.includes(item) ? 1 : 0;
+    return Math.max(0, invCount - reserved + includeSelf);
+  };
+
+  const canStartForSlot = (selected: string[]) => {
+    const required: ('water'|'fertilizer'|'antiBug')[] = ['water','fertilizer','antiBug'];
+    if (!required.every(i => selected.includes(i))) return false;
+    // ensure each required item has at least 1 available (including this slot)
+    return required.every(i => remainingFor(i, selected) >= 1);
+  };
+
+
+
   return (
     <div className="relative">
       {/* Festive Land Background */}
@@ -88,7 +125,7 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, trans
             <CardContent className="p-4 flex flex-col items-center justify-center min-h-[200px]">
                 {tree ? (
                   <>
-                    <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 mb-3 rounded-lg overflow-hidden shadow-md relative">
+                    <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 mb-3 rounded-lg overflow-hidden shadow-md relative group">
                       {(() => {
                         const candidate = tree && ((tree as any).image_url_resolved || tree.image || tree.image_url || (tree.metadata && tree.metadata.image));
                         const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : null;
@@ -111,41 +148,75 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, trans
                       {/* Active/Not Active badge */}
                       <div className="absolute top-2 left-2">
                         {isActive ? (
-                          <Badge className="bg-green-600 text-white text-xs">Active • {formatTimeLeft(timeLeft)}</Badge>
+                          <Badge className="bg-green-600 text-white text-xs">Active</Badge>
                         ) : (
                           <Badge className="bg-gray-400 text-white text-xs">Not active</Badge>
                         )}
                       </div>
+
+                      {/* Hover overlay showing countdown when active */}
+                      {isActive && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-flex flex-col items-center justify-center text-white text-sm">
+                          <div className="bg-black/60 px-3 py-1 rounded">Farming ends in</div>
+                          <div className="mt-2 font-mono text-lg">{formatTimeLeft(timeLeft)}</div>
+                        </div>
+                      )}
                     </div>
-                  <Badge
-                    className="text-xs mb-1"
-                    style={{ backgroundColor: RARITY_COLORS[(tree.rarity || tree.metadata?.rarity || '').toLowerCase()] || '#999', color: 'white' }}
-                  >
-                    {tree.rarity}
-                  </Badge>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Power {tree.power}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge
+                      className="text-xs"
+                      style={{ backgroundColor: RARITY_COLORS[(tree.rarity || tree.metadata?.rarity || '').toLowerCase()] || '#999', color: 'white' }}
+                    >
+                      {tree.rarity}
+                    </Badge>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Power {tree.power}</p>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); if (onRemoveTree) onRemoveTree(index); }}
+                      className="ml-auto text-xs px-2 py-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded hover:bg-red-200 transition"
+                      title="Remove tree from slot"
+                    >
+                      Remove
+                    </button>
+                  </div>
                   {/* Selected item indicators + Start Farming button */}
                   <div className="flex gap-2 mt-3 items-center">
-                    {(['water','fertilizer','antiBug'] as const).map(item => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={e => { e.stopPropagation(); toggleSelectItem(index, item); }}
-                        className={`p-1 rounded ${selected.includes(item) ? 'ring-2 ring-offset-1 ring-green-400 bg-green-50 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-800'} transition min-w-[36px] min-h-[28px] flex items-center justify-center`}
-                        title={`Toggle ${item}`}
-                      >
-                        {item === 'water' && <Droplet className="w-4 h-4 text-blue-500" />}
-                        {item === 'fertilizer' && <Leaf className="w-4 h-4 text-green-600" />}
-                        {item === 'antiBug' && <Bug className="w-4 h-4 text-yellow-600" />}
-                      </button>
-                    ))}
+                    {(['water','fertilizer','antiBug'] as const).map(item => {
+                      const isSelected = selected.includes(item);
+                      const disabled = !availableFor(item, selected);
+                      const remaining = remainingFor(item, selected);
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={e => { e.stopPropagation(); if (!disabled || isSelected) toggleSelectItem(index, item); }}
+                          className={`p-1 rounded ${isSelected ? 'ring-2 ring-offset-1 ring-green-400 bg-green-50 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-800'} transition min-w-[36px] min-h-[28px] flex items-center justify-center relative`}
+                          title={`Toggle ${item}`}
+                          aria-pressed={isSelected}
+                          aria-disabled={disabled && !isSelected}
+                        >
+                          {item === 'water' && <Droplet className={`w-4 h-4 ${disabled && !isSelected ? 'opacity-40' : ''} text-blue-500`} />}
+                          {item === 'fertilizer' && <Leaf className={`w-4 h-4 ${disabled && !isSelected ? 'opacity-40' : ''} text-green-600`} />}
+                          {item === 'antiBug' && <Bug className={`w-4 h-4 ${disabled && !isSelected ? 'opacity-40' : ''} text-yellow-600`} />}
+                          <span className="absolute -right-2 -bottom-2 bg-white dark:bg-gray-900 rounded-full px-1 text-xs font-medium border border-gray-200 dark:border-gray-700">{remaining}</span>
+                        </button>
+                      );
+                    })}
 
                     <div className="ml-2">
                       <button
                         type="button"
-                        disabled={!(['water','fertilizer','antiBug'].every(i => selected.includes(i))) || isActive }
-                        onClick={async (e) => { e.stopPropagation(); if (onStartFarming) await onStartFarming(index, selected as any); }}
-                        className={`px-3 py-1 rounded ${(['water','fertilizer','antiBug'].every(i => selected.includes(i)) && !isActive) ? 'bg-[#0F5F3A] text-white hover:bg-[#166C47]' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                        disabled={!canStartForSlot(selected) || isActive}
+                        onClick={async (e) => { e.stopPropagation(); if (onStartFarming) {
+                          await onStartFarming(index, selected as any);
+                          // Clear selection for this slot after successful start
+                          setSelectedMap(prev => {
+                            const copy = { ...prev };
+                            delete copy[index];
+                            return copy;
+                          });
+                        } }}
+                        className={`px-3 py-1 rounded ${(canStartForSlot(selected) && !isActive) ? 'bg-[#0F5F3A] text-white hover:bg-[#166C47]' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
                       >
                         Start Farming
                       </button>

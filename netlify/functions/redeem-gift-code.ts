@@ -91,7 +91,7 @@ export const handler: Handler = async (event) => {
           owner_address: address,
           rarity,
           power,
-          daily_yield: 0,
+          daily_yield: (await import('../../src/lib/constants')).DAILY_REWARDS[rarity as any] || 0,
           health: 100,
           image_url: null,
           metadata: { claimed_via_gift_code: code },
