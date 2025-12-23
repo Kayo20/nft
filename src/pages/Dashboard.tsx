@@ -3,6 +3,7 @@ import React from 'react';
 import { useWallet } from '@/hooks/useWallet';
 import { useNFTs } from '@/hooks/useNFTs';
 import { useItems } from '@/hooks/useItems';
+import { useUserLands, useLandDetails, useUpdateLandSlot } from '@/hooks/useUserLands';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LandSlots } from '@/components/dashboard/LandSlots';
