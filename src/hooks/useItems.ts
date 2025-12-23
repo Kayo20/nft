@@ -8,6 +8,7 @@ export const useItems = (address: string | null) => {
     fertilizer: 0,
     water: 0,
     antiBug: 0,
+    tfBalance: 0,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -71,17 +71,22 @@ export const useLandDetails = (landId: number | string | null) => {
 export const useUpdateLandSlot = (landId: number | string | null) => {
   const queryClient = useQueryClient();
 
-  return useMutation(
-    async ({ slotIndex, nftId }: { slotIndex: number; nftId: number | null }) => {
-      if (!landId) throw new Error('landId required');
-      return await updateLandSlot(landId, slotIndex, nftId);
-    },
-    {
-      onSuccess: () => {
-        // Refresh the land details and user lands lists
-        queryClient.invalidateQueries(['landDetails', landId]);
-        queryClient.invalidateQueries(['userLands']);
-      },
+  // Use a lightweight custom mutateAsync to avoid react-query mutation internals
+  // which may trigger cross-version issues in some dev setups. This provides
+  // the same observable behavior for our code: perform the update and then
+  // invalidate the relevant queries.
+  const mutateAsync = async ({ slotIndex, nftId }: { slotIndex: number; nftId: number | null }) => {
+    if (!landId) throw new Error('landId required');
+    const res = await updateLandSlot(landId, slotIndex, nftId);
+    // Refresh the land details and user lands lists
+    try {
+      queryClient.invalidateQueries(['landDetails', landId]);
+      queryClient.invalidateQueries(['userLands']);
+    } catch (e) {
+      // ignore invalidation failures in dev
     }
-  );
+    return res;
+  };
+
+  return { mutateAsync };
 };
