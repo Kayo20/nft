@@ -11,7 +11,7 @@ const getBaseUrl = () => {
 // User Balances
 export async function getUserBalances() {
   const baseUrl = getBaseUrl();
-  const res = await fetch(`${baseUrl}/api/user/balances`, {
+  const res = await fetch(`${baseUrl}/.netlify/functions/user-balances`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Failed to fetch balances');
@@ -21,7 +21,7 @@ export async function getUserBalances() {
 // User Profile
 export async function getUserProfile() {
   const baseUrl = getBaseUrl();
-  const res = await fetch(`${baseUrl}/api/user/profile`, {
+  const res = await fetch(`${baseUrl}/.netlify/functions/user-profile`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Failed to fetch profile');
@@ -31,7 +31,7 @@ export async function getUserProfile() {
 // User Inventory
 export async function getUserInventory() {
   const baseUrl = getBaseUrl();
-  const res = await fetch(`${baseUrl}/api/user/inventory`, {
+  const res = await fetch(`${baseUrl}/.netlify/functions/user-inventory`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Failed to fetch inventory');
@@ -41,7 +41,7 @@ export async function getUserInventory() {
 // Claimable Rewards
 export async function getClaimableRewards() {
   const baseUrl = getBaseUrl();
-  const res = await fetch(`${baseUrl}/api/rewards/claimable`, {
+  const res = await fetch(`${baseUrl}/.netlify/functions/rewards-claimable`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Failed to fetch claimable rewards');
@@ -51,7 +51,7 @@ export async function getClaimableRewards() {
 // User Lands
 export async function getUserLands() {
   const baseUrl = getBaseUrl();
-  const res = await fetch(`${baseUrl}/api/user/lands`, {
+  const res = await fetch(`${baseUrl}/.netlify/functions/user-lands`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Failed to fetch lands');
@@ -62,7 +62,7 @@ export async function getUserLands() {
 // Land Details
 export async function getLandDetails(landId: number | string) {
   const baseUrl = getBaseUrl();
-  const res = await fetch(`${baseUrl}/api/land/${landId}`, {
+  const res = await fetch(`${baseUrl}/.netlify/functions/land-details/land/${landId}`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Failed to fetch land details');
@@ -72,7 +72,7 @@ export async function getLandDetails(landId: number | string) {
 // Update Land Slot
 export async function updateLandSlot(landId: number | string, slotIndex: number, nftId: number | null) {
   const baseUrl = getBaseUrl();
-  const res = await fetch(`${baseUrl}/api/land/${landId}/slots`, {
+  const res = await fetch(`${baseUrl}/.netlify/functions/land-update-slots/land/${landId}/slots`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
