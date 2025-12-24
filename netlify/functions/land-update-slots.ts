@@ -117,23 +117,40 @@ export const handler: Handler = async (event) => {
 
     // Update or delete slot
     if (nftId === null) {
-      // Remove from slot (DB uses snake_case)
-      await supabase
-        .from("land_slots")
-        .delete()
-        .eq("land_id", landId)
-        .eq("slot_index", slotIndex)
-        .catch(() => {});
+      // Unset the nft_id for this slot (prefer update so slot row remains present)
+      try {
+        const { data: updated } = await supabase
+          .from("land_slots")
+          .update({ nft_id: null })
+          .eq("land_id", landId)
+          .eq("slot_index", slotIndex)
+          .select();
+
+        // If no row existed, insert an empty slot row so subsequent reads see it
+        if (!updated || updated.length === 0) {
+          await supabase.from('land_slots').insert([{ land_id: landId, slot_index: slotIndex, nft_id: null }]);
+        }
+      } catch (e) {
+        console.error('Failed to remove nft from slot:', e);
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to remove slot' }) };
+      }
     } else {
-      // Upsert slot using snake_case column names
-      await supabase
-        .from("land_slots")
-        .upsert({
-          land_id: landId,
-          slot_index: slotIndex,
-          nft_id: nftId,
-        }, { onConflict: ["land_id", "slot_index"] })
-        .catch(() => {});
+      // Upsert slot using snake_case column names and return the persisted row
+      try {
+        console.log('Upserting slot', { landId, slotIndex, nftId });
+        const { data: upserted, error: upsertErr } = await supabase
+          .from("land_slots")
+          .upsert([{ land_id: landId, slot_index: slotIndex, nft_id: nftId }], { onConflict: ["land_id", "slot_index"] })
+          .select();
+        console.log('Upserted result', upserted, 'err', upsertErr);
+        if (upsertErr) {
+          console.error('Failed to upsert slot:', upsertErr);
+          return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to upsert slot' }) };
+        }
+      } catch (e) {
+        console.error('Failed to upsert slot:', e);
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to upsert slot' }) };
+      }
     }
 
     return {
@@ -143,7 +160,7 @@ export const handler: Handler = async (event) => {
         ok: true,
         slot: {
           index: slotIndex,
-          nftId,
+          nftId: nftId ?? null,
         },
       }),
     };
