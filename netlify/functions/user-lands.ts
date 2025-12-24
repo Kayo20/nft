@@ -13,6 +13,8 @@ try {
 export const handler: Handler = async (event) => {
   const headers = { ...corsHeaders(), ...securityHeaders() };
 
+  console.debug('user-lands handler invoked', { method: event.httpMethod, path: event.path });
+
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers, body: '' };
   }
@@ -23,60 +25,78 @@ export const handler: Handler = async (event) => {
     try {
       session = verifySession(event.headers && (event.headers.cookie || event.headers.Cookie || ''));
     } catch (err) {
-      console.warn('Session verification failed:', err);
+      console.warn('Session verification failed (exception):', err);
+      // Return 401 so the frontend can prompt for login instead of failing
       return { statusCode: 401, headers, body: JSON.stringify({ error: "unauthorized" }) };
     }
     if (!session) {
+      console.debug('Session not found or invalid');
       return { statusCode: 401, headers, body: JSON.stringify({ error: "unauthorized" }) };
     }
 
     const address = (session.address || '').toLowerCase();
+    console.debug('user-lands for address', address);
 
     // Fetch lands for this user
     // For now, we'll create a default land if none exists
     let landsList: any[] = [];
 
-    if (supabase) {
-      const { data: lands } = await supabase
-        .from("lands")
-        .select("*")
-        .eq("owner", address)
-        .order("createdAt", { ascending: true })
-        .catch(() => ({ data: [] }));
+    try {
+      if (supabase) {
+        const { data: lands } = await supabase
+          .from("lands")
+          .select("*")
+          .eq("owner", address)
+          .order("createdAt", { ascending: true })
+          .catch((e: any) => {
+            console.warn('Supabase query for lands failed:', e);
+            return { data: [] };
+          });
 
-      landsList = lands || [];
+        landsList = lands || [];
 
-      // If no lands exist, create a default one (season 0, land 1)
-      if (landsList.length === 0) {
-        try {
-          const newLand = {
-            owner: address,
-            season: 0,
-            name: "Land 1",
-            slots: 9,
-            createdAt: new Date().toISOString(),
-          };
-          const { data: created } = await supabase
-            .from("lands")
-            .insert([newLand])
-            .select()
-            .catch(() => ({ data: [] }));
+        // If no lands exist, create a default one (season 0, land 1)
+        if (landsList.length === 0) {
+          try {
+            const newLand = {
+              owner: address,
+              season: 0,
+              name: "Land 1",
+              slots: 9,
+              createdAt: new Date().toISOString(),
+            };
+            const { data: created } = await supabase
+              .from("lands")
+              .insert([newLand])
+              .select()
+              .catch((e: any) => {
+                console.warn('Supabase insert for default land failed:', e);
+                return { data: [] };
+              });
 
-          if (created && created.length > 0) {
-            landsList = created;
-          } else {
-            // If insert failed, fallback to in-memory default
-            landsList = [ { id: `local-${Date.now()}`, ...newLand } ];
+            if (created && created.length > 0) {
+              landsList = created;
+            } else {
+              // If insert failed, fallback to in-memory default
+              landsList = [ { id: `local-${Date.now()}`, ...newLand } ];
+            }
+          } catch (e) {
+            console.warn('Failed to create default land (exception):', e);
+            landsList = [ { id: `local-${Date.now()}`, owner: address, season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() } ];
           }
-        } catch (e) {
-          console.warn('Failed to create default land:', e);
-          landsList = [ { id: `local-${Date.now()}`, owner: address, season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() } ];
         }
+      } else {
+        // Supabase not configured (likely in a lightweight environment). Return an in-memory default land instead of erroring.
+        console.warn('Supabase client not configured - using in-memory fallback for lands');
+        landsList = [ { id: `local-${Date.now()}`, owner: address, season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() } ];
       }
-    } else {
-      // Supabase not configured (likely in a lightweight environment). Return an in-memory default land instead of erroring.
-      landsList = [ { id: `local-${Date.now()}`, owner: address, season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() } ];
+    } catch (e) {
+      console.error('Unexpected error while fetching/creating lands:', e);
+      // Fall back to empty lands list to avoid returning 500 to clients
+      landsList = [];
     }
+
+    console.debug('Returning lands count', landsList.length);
 
     return {
       statusCode: 200,
@@ -94,7 +114,16 @@ export const handler: Handler = async (event) => {
       }),
     };
   } catch (err: any) {
-    console.error("user-lands error", err);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: "internal server error" }) };
+    // Log full error but return a safe fallback to avoid 500 errors surface to frontend
+    console.error("user-lands fatal error", err);
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        address: null,
+        lands: [],
+        error: 'internal server error',
+      }),
+    };
   }
 };
