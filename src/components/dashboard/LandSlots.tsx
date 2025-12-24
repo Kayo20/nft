@@ -122,10 +122,10 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, trans
             className="cursor-pointer hover:shadow-lg transition-all border-2 border-gray-200 dark:border-gray-700 hover:border-[#0F5F3A] dark:hover:border-[#22C55E] bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
             onClick={() => onSlotClick(index)}
           >
-            <CardContent className="p-4 flex flex-col items-center justify-center min-h-[200px]">
+            <CardContent className="p-3 flex flex-col items-center justify-center min-h-[160px] sm:min-h-[200px]">
                 {tree ? (
                   <>
-                    <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 mb-3 rounded-lg overflow-hidden shadow-md relative group">
+                    <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 lg:w-48 lg:h-48 mb-3 rounded-lg overflow-hidden shadow-md relative group">
                       {(() => {
                         const candidate = tree && ((tree as any).image_url_resolved || tree.image || tree.image_url || (tree.metadata && tree.metadata.image));
                         const imgSrc = (candidate && String(candidate).trim()) ? String(candidate) : null;
@@ -173,7 +173,7 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, trans
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); if (onRemoveTree) onRemoveTree(index); }}
-                      className="ml-auto text-xs px-2 py-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded hover:bg-red-200 transition"
+                      className="ml-auto text-xs px-1 py-0.5 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded hover:bg-red-200 transition"
                       title="Remove tree from slot"
                     >
                       Remove
@@ -190,15 +190,15 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, trans
                           key={item}
                           type="button"
                           onClick={e => { e.stopPropagation(); if (!disabled || isSelected) toggleSelectItem(index, item); }}
-                          className={`p-1 rounded ${isSelected ? 'ring-2 ring-offset-1 ring-green-400 bg-green-50 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-800'} transition min-w-[36px] min-h-[28px] flex items-center justify-center relative`}
+                          className={`p-0.5 rounded-md ${isSelected ? 'ring-2 ring-offset-1 ring-green-400 bg-green-50 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-800'} transition min-w-[28px] min-h-[24px] flex items-center justify-center relative`}
                           title={`Toggle ${item}`}
                           aria-pressed={isSelected}
                           aria-disabled={disabled && !isSelected}
                         >
-                          {item === 'water' && <Droplet className={`w-4 h-4 ${disabled && !isSelected ? 'opacity-40' : ''} text-blue-500`} />}
-                          {item === 'fertilizer' && <Leaf className={`w-4 h-4 ${disabled && !isSelected ? 'opacity-40' : ''} text-green-600`} />}
-                          {item === 'antiBug' && <Bug className={`w-4 h-4 ${disabled && !isSelected ? 'opacity-40' : ''} text-yellow-600`} />}
-                          <span className="absolute -right-2 -bottom-2 bg-white dark:bg-gray-900 rounded-full px-1 text-xs font-medium border border-gray-200 dark:border-gray-700">{remaining}</span>
+                          {item === 'water' && <Droplet className={`w-3 h-3 ${disabled && !isSelected ? 'opacity-40' : ''} text-blue-500`} />}
+                          {item === 'fertilizer' && <Leaf className={`w-3 h-3 ${disabled && !isSelected ? 'opacity-40' : ''} text-green-600`} />}
+                          {item === 'antiBug' && <Bug className={`w-3 h-3 ${disabled && !isSelected ? 'opacity-40' : ''} text-yellow-600`} />}
+                          <span className="absolute -right-1 -bottom-1 bg-white dark:bg-gray-900 rounded-full px-0.5 text-[10px] font-medium border border-gray-200 dark:border-gray-700">{remaining}</span>
                         </button>
                       );
                     })}
@@ -216,9 +216,9 @@ export const LandSlots = ({ trees, onSlotClick, onAddTree, onStartFarming, trans
                             return copy;
                           });
                         } }}
-                        className={`px-3 py-1 rounded ${(canStartForSlot(selected) && !isActive) ? 'bg-[#0F5F3A] text-white hover:bg-[#166C47]' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                        className={`px-2 py-0.5 rounded-md text-xs h-7 inline-flex items-center justify-center ${(canStartForSlot(selected) && !isActive) ? 'bg-[#0F5F3A] text-white hover:bg-[#166C47]' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
                       >
-                        Start Farming
+                        Farm
                       </button>
                     </div>
                   </div>
