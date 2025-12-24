@@ -19,7 +19,13 @@ export const handler: Handler = async (event) => {
 
   try {
     // Verify session
-    const session = verifySession(event.headers && (event.headers.cookie || event.headers.Cookie || ''));
+    let session: any;
+    try {
+      session = verifySession(event.headers && (event.headers.cookie || event.headers.Cookie || ''));
+    } catch (err) {
+      console.warn('Session verification failed:', err);
+      return { statusCode: 401, headers, body: JSON.stringify({ error: "unauthorized" }) };
+    }
     if (!session) {
       return { statusCode: 401, headers, body: JSON.stringify({ error: "unauthorized" }) };
     }
@@ -28,37 +34,48 @@ export const handler: Handler = async (event) => {
 
     // Fetch lands for this user
     // For now, we'll create a default land if none exists
-    const { data: lands } = await supabase
-      .from("lands")
-      .select("*")
-      .eq("owner", address)
-      .order("createdAt", { ascending: true })
-      .catch(() => ({ data: [] }));
+    let landsList: any[] = [];
 
-    let landsList = lands || [];
+    if (supabase) {
+      const { data: lands } = await supabase
+        .from("lands")
+        .select("*")
+        .eq("owner", address)
+        .order("createdAt", { ascending: true })
+        .catch(() => ({ data: [] }));
 
-    // If no lands exist, create a default one (season 0, land 1)
-    if (landsList.length === 0 && supabase) {
-      try {
-        const newLand = {
-          owner: address,
-          season: 0,
-          name: "Land 1",
-          slots: 9,
-          createdAt: new Date().toISOString(),
-        };
-        const { data: created } = await supabase
-          .from("lands")
-          .insert([newLand])
-          .select()
-          .catch(() => ({ data: [] }));
+      landsList = lands || [];
 
-        if (created && created.length > 0) {
-          landsList = created;
+      // If no lands exist, create a default one (season 0, land 1)
+      if (landsList.length === 0) {
+        try {
+          const newLand = {
+            owner: address,
+            season: 0,
+            name: "Land 1",
+            slots: 9,
+            createdAt: new Date().toISOString(),
+          };
+          const { data: created } = await supabase
+            .from("lands")
+            .insert([newLand])
+            .select()
+            .catch(() => ({ data: [] }));
+
+          if (created && created.length > 0) {
+            landsList = created;
+          } else {
+            // If insert failed, fallback to in-memory default
+            landsList = [ { id: `local-${Date.now()}`, ...newLand } ];
+          }
+        } catch (e) {
+          console.warn('Failed to create default land:', e);
+          landsList = [ { id: `local-${Date.now()}`, owner: address, season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() } ];
         }
-      } catch (e) {
-        console.warn('Failed to create default land:', e);
       }
+    } else {
+      // Supabase not configured (likely in a lightweight environment). Return an in-memory default land instead of erroring.
+      landsList = [ { id: `local-${Date.now()}`, owner: address, season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() } ];
     }
 
     return {

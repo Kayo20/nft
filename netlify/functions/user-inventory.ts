@@ -19,12 +19,33 @@ export const handler: Handler = async (event) => {
 
   try {
     // Verify session
-    const session = verifySession(event.headers && (event.headers.cookie || event.headers.Cookie || ''));
+    let session: any;
+    try {
+      session = verifySession(event.headers && (event.headers.cookie || event.headers.Cookie || ''));
+    } catch (err) {
+      console.warn('Session verification failed:', err);
+      return { statusCode: 401, headers, body: JSON.stringify({ error: "unauthorized" }) };
+    }
     if (!session) {
       return { statusCode: 401, headers, body: JSON.stringify({ error: "unauthorized" }) };
     }
 
     const address = session.address;
+
+    if (!supabase) {
+      // Supabase unavailable — return empty inventory as a safe fallback
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          address,
+          items: [],
+          water: 0,
+          fertilizer: 0,
+          antiBug: 0,
+        }),
+      };
+    }
 
     // Resolve user UUID
     const { data: userRow, error: userErr } = await supabase.from('users').select('id').eq('wallet_address', address).single();
@@ -43,6 +64,9 @@ export const handler: Handler = async (event) => {
         body: JSON.stringify({
           address,
           items: [],
+          water: 0,
+          fertilizer: 0,
+          antiBug: 0,
         }),
       };
     }
