@@ -46,16 +46,16 @@ export const handler: Handler = async (event) => {
       return { statusCode: 404, headers, body: JSON.stringify({ error: "land not found" }) };
     }
 
-    // Fetch land slots for this land
+    // Fetch land slots for this land (DB uses snake_case)
     const { data: slots } = await supabase
       .from("land_slots")
       .select("*")
-      .eq("landId", landId)
-      .order("slotIndex", { ascending: true })
+      .eq("land_id", landId)
+      .order("slot_index", { ascending: true })
       .catch(() => ({ data: [] }));
 
     // If any slots reference NFTs, fetch those NFT records to include details
-    const nftIds = (slots || []).map((s: any) => s.nftId).filter((id: any) => id !== null && id !== undefined);
+    const nftIds = (slots || []).map((s: any) => s.nft_id).filter((id: any) => id !== null && id !== undefined);
     let nftMap: Record<string, any> = {};
     if (nftIds.length > 0) {
       const { data: nftRows } = await supabase
@@ -69,11 +69,11 @@ export const handler: Handler = async (event) => {
     // Initialize slots array (fill missing slots with null and include nft details when present)
     const slotsArray = [];
     for (let i = 0; i < (land.slots || 9); i++) {
-      const slot = slots?.find((s: any) => s.slotIndex === i);
-      const nft = slot?.nftId ? nftMap[slot.nftId] || null : null;
+      const slot = slots?.find((s: any) => s.slot_index === i);
+      const nft = slot?.nft_id ? nftMap[slot.nft_id] || null : null;
       slotsArray.push({
         index: i,
-        nftId: slot?.nftId || null,
+        nftId: slot?.nft_id || null,
         nft,
       });
     }
@@ -87,9 +87,9 @@ export const handler: Handler = async (event) => {
         season: land.season || 0,
         name: land.name,
         slots: land.slots || 9,
-        createdAt: land.createdAt,
+        createdAt: land.created_at,
         slotData: slotsArray,
-        lastItemsApplied: land.lastItemsApplied || null,
+        lastItemsApplied: land.last_items_applied || null,
       }),
     };
   } catch (err: any) {

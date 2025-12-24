@@ -38,8 +38,8 @@ async function main() {
       const landRow = (upserted && upserted.length) ? upserted[0] : (await supabase.from('lands').select('*').eq('owner', addr).single().catch(() => ({ data: null }))).data;
       if (landRow && landRow.id) {
         const slotInserts = [];
-        for (let i = 0; i < (landRow.slots || 9); i++) slotInserts.push({ landId: landRow.id, slotIndex: i });
-        await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['landId', 'slotIndex'] }).select().catch((e) => { console.error('failed to upsert slots for', addr, e); });
+        for (let i = 0; i < (landRow.slots || 9); i++) slotInserts.push({ land_id: landRow.id, slot_index: i });
+        await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['land_id', 'slot_index'] }).select().catch((e) => { console.error('failed to upsert slots for', addr, e); });
         createdLands++;
       }
     }

@@ -117,22 +117,22 @@ export const handler: Handler = async (event) => {
 
     // Update or delete slot
     if (nftId === null) {
-      // Remove from slot
+      // Remove from slot (DB uses snake_case)
       await supabase
         .from("land_slots")
         .delete()
-        .eq("landId", landId)
-        .eq("slotIndex", slotIndex)
+        .eq("land_id", landId)
+        .eq("slot_index", slotIndex)
         .catch(() => {});
     } else {
-      // Upsert slot
+      // Upsert slot using snake_case column names
       await supabase
         .from("land_slots")
         .upsert({
-          landId,
-          slotIndex,
-          nftId,
-        }, { onConflict: ["landId", "slotIndex"] })
+          land_id: landId,
+          slot_index: slotIndex,
+          nft_id: nftId,
+        }, { onConflict: ["land_id", "slot_index"] })
         .catch(() => {});
     }
 

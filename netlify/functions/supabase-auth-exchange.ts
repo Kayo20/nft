@@ -73,8 +73,8 @@ export const handler: Handler = async (event) => {
       if (land && land.id) {
         const slots = land.slots || 9;
         const slotInserts = [];
-        for (let i = 0; i < slots; i++) slotInserts.push({ landId: land.id, slotIndex: i });
-        await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['landId', 'slotIndex'] }).select().catch(() => ({ data: null }));
+        for (let i = 0; i < slots; i++) slotInserts.push({ land_id: land.id, slot_index: i });
+        await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['land_id', 'slot_index'] }).select().catch(() => ({ data: null }));
       }
     } catch (e) {
       console.warn('supabase-auth-exchange: failed to ensure default land for user', e?.message || e);

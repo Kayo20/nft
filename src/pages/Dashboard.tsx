@@ -193,6 +193,12 @@ export default function Dashboard() {
       // Find a random NFT not already in land
       const availableNFT = allNFTs.find(nft => !landSlots.some(t => t && t.id === nft.id));
       if (availableNFT) {
+        // Require wallet connection to persist planting to Supabase
+        if (!wallet.isConnected) {
+          toast.error('Connect your wallet to save planted NFTs to your account.');
+          return;
+        }
+
         // Persist to Supabase if we have a land
         if (currentLandId) {
           try {
@@ -203,8 +209,10 @@ export default function Dashboard() {
               copy[slotIndex] = { ...availableNFT, slotIndex } as any;
               return copy;
             });
-            toast.success('NFT planted to land!');
-            // the land details hook will refresh and merge slot data via effect
+            // Refresh to ensure DB is reflected
+            try { await refetchLands(); } catch (e) { /* ignore */ }
+            try { await refetchLandDetails(); } catch (e) { /* ignore */ }
+            toast.success('NFT planted to land and saved!');
             return;
           } catch (e) {
             console.error('Failed to update slot:', e);
@@ -234,6 +242,7 @@ export default function Dashboard() {
           }
         } catch (e) {
           console.warn('Failed to create default land or persist slot:', e);
+          toast.error('Failed to persist NFT to your account.');
         }
 
         // Fallback to local-only if no land created
@@ -365,6 +374,10 @@ export default function Dashboard() {
                     }
                     try {
                       await updateSlot({ slotIndex, nftId: null });
+                      // Optimistically update local UI and refresh server data
+                      setLandSlots(prev => prev.map((s,i) => i===slotIndex? undefined: s));
+                      try { await refetchLands(); } catch (e) { /* ignore */ }
+                      try { await refetchLandDetails(); } catch (e) { /* ignore */ }
                       toast.success('Tree removed from slot');
                     } catch (e) {
                       console.error('failed to remove slot', e);
