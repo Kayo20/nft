@@ -197,6 +197,12 @@ export default function Dashboard() {
         if (currentLandId) {
           try {
             await updateSlot({ slotIndex, nftId: availableNFT.id });
+            // Optimistically update the UI immediately so the NFT shows as planted
+            setLandSlots(prev => {
+              const copy = [...prev];
+              copy[slotIndex] = { ...availableNFT, slotIndex } as any;
+              return copy;
+            });
             toast.success('NFT planted to land!');
             // the land details hook will refresh and merge slot data via effect
             return;

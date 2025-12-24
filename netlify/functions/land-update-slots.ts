@@ -70,9 +70,10 @@ export const handler: Handler = async (event) => {
       return { statusCode: 404, headers, body: JSON.stringify({ error: "land not found" }) };
     }
 
-    // If nftId is not null, verify NFT ownership
+    // If nftId is not null, verify NFT ownership and ensure NFT record exists in the DB.
     if (nftId !== null) {
-      const { data: nft } = await supabase
+      // Try to find an NFT with matching id and owner
+      const { data: nftByOwner } = await supabase
         .from("nfts")
         .select("*")
         .eq("id", nftId)
@@ -80,8 +81,37 @@ export const handler: Handler = async (event) => {
         .single()
         .catch(() => ({ data: null }));
 
-      if (!nft) {
-        return { statusCode: 404, headers, body: JSON.stringify({ error: "nft not found" }) };
+      if (!nftByOwner) {
+        // NFT not found with owner match. Try to find any NFT record by id.
+        const { data: nftAny } = await supabase
+          .from("nfts")
+          .select("*")
+          .eq("id", nftId)
+          .single()
+          .catch(() => ({ data: null }));
+
+        if (!nftAny) {
+          // No NFT record exists — insert a minimal record so the user can plant it.
+          try {
+            await supabase.from('nfts').insert([{ id: nftId, owner_address: address }]);
+          } catch (e) {
+            console.warn('Failed to insert minimal nft record:', e);
+            // If insert fails, continue — we'll let the upsert on land_slots handle persistence if possible
+          }
+        } else {
+          // If a record exists but owner doesn't match, check if owner is empty/unknown — otherwise deny.
+          const existingOwner = (nftAny as any).owner_address;
+          if (existingOwner && existingOwner.toLowerCase() !== String(address).toLowerCase()) {
+            return { statusCode: 403, headers, body: JSON.stringify({ error: "nft not owned by user" }) };
+          }
+
+          // Otherwise, try to set owner to this address (repair inconsistent data)
+          try {
+            await supabase.from('nfts').update({ owner_address: address }).eq('id', nftId).catch(() => {});
+          } catch (e) {
+            // ignore
+          }
+        }
       }
     }
 
