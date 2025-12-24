@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LandSlots } from '@/components/dashboard/LandSlots';
 import { SeasonBadge } from '@/components/dashboard/SeasonBadge';
-import { getUserBalances } from '@/lib/apiUser';
+import { getUserBalances, getUserLands as getUserLandsApi, updateLandSlot as updateLandSlotApi } from '@/lib/apiUser';
 import { motion } from 'framer-motion';
 import {
   TreePine,
@@ -213,12 +213,35 @@ export default function Dashboard() {
           }
         }
 
-        // Fallback to local-only if no land available
+        // If no current land, ask backend to create default land (user-lands will insert default) and then persist
+        try {
+          const newLands = await getUserLandsApi();
+          const newLand = (newLands && newLands.length > 0) ? newLands[0] : null;
+          if (newLand && newLand.id) {
+            // Persist directly via API helper (we don't have mutate for this new land id)
+            await updateLandSlotApi(newLand.id, slotIndex, availableNFT.id);
+            // Refresh queries so hooks reflect DB state
+            try { await refetchLands(); } catch (e) { /* ignore */ }
+            try { await refetchLandDetails(); } catch (e) { /* ignore */ }
+            // Optimistic local update
+            setLandSlots(prev => {
+              const copy = [...prev];
+              copy[slotIndex] = { ...availableNFT, slotIndex } as any;
+              return copy;
+            });
+            toast.success('NFT planted to your land and saved!');
+            return;
+          }
+        } catch (e) {
+          console.warn('Failed to create default land or persist slot:', e);
+        }
+
+        // Fallback to local-only if no land created
         const nftWithSlot = { ...availableNFT, slotIndex };
         const newSlots = [...landSlots];
         newSlots[slotIndex] = nftWithSlot;
         setLandSlots(newSlots);
-        toast.success('NFT added to land!');
+        toast.success('NFT added to land (local only)');
       } else {
         toast.error('No available NFTs to add.');
       }
