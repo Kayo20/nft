@@ -260,14 +260,13 @@ export default function Dashboard() {
         } catch (e) {
           console.warn('Failed to create default land or persist slot:', e);
           toast.error('Failed to persist NFT to your account.');
+          return;
         }
 
-        // Fallback to local-only if no land created
-        const nftWithSlot = { ...availableNFT, slotIndex };
-        const newSlots = [...landSlots];
-        newSlots[slotIndex] = nftWithSlot;
-        setLandSlots(newSlots);
-        toast.success('NFT added to land (local only)');
+        // Fallback: do NOT add locally. We require persistence to a server land for user-owned slots.
+        // Inform the user and abort the operation.
+        toast.error('Failed to persist NFT to your account — no persisted land available. Please try again or contact support.');
+        return;
       } else {
         toast.error('No available NFTs to add.');
       }
@@ -384,9 +383,8 @@ export default function Dashboard() {
             <CardContent>
               <LandSlots trees={landSlots} onSlotClick={handleSlotClick} onStartFarming={handleStartFarming} onRemoveTree={async (slotIndex:number) => {
                     if (!currentLandId) {
-                      // just update local
-                      setLandSlots(prev => prev.map((s,i) => i===slotIndex? undefined: s));
-                      toast.success('Tree removed from slot');
+                      // No persisted land — do not modify local state. Require server persistence for removals.
+                      toast.error('Cannot remove tree: no persisted land found for your account.');
                       return;
                     }
                     try {
