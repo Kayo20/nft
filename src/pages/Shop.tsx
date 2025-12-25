@@ -90,23 +90,31 @@ export default function Shop() {
   const handleOpenChest = async () => {
     setOpeningChest(true);
     try {
-      // Ensure sufficient balance
-      if (Number(tfBalance) < chestTotal) {
-        toast.error(`Insufficient TF balance: need ${chestTotal.toLocaleString()} TF to open a chest`);
-        setOpeningChest(false);
-        return;
-      }
-
       // Transfer TF to game wallet for chest purchase (price + tx fee)
       setTransferInProgress(true);
       setTransferAction('chest');
       toast('Please confirm the TF transfer for chest (including transaction fee) in your wallet...', { duration: 4000 });
       const expected = chestTotal;
-      const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(expected));
-      const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
+      let txHash: string | undefined = undefined;
+
+      try {
+        const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(expected));
+        txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
+      } catch (txErr: any) {
+        // Show detailed revert reason if available and keep dialog open so user may redeem a code
+        const rawMsg = txErr?.reason || txErr?.error?.message || txErr?.message || String(txErr);
+        const m = String(rawMsg).match(/reverted: ?"([^"]+)"/i);
+        const reason = m ? m[1] : rawMsg;
+        toast.error('Failed to open a chest', { description: reason });
+        setTransferInProgress(false);
+        setOpeningChest(false);
+        // Do not close the chest dialog so user can redeem gift code
+        return;
+      }
 
       setTransferInProgress(false);
       setVerifyingTx(true);
+
       try {
         const result = await openChest('standard', txHash);
         setVerifyingTx(false);
@@ -115,14 +123,18 @@ export default function Shop() {
           // refetch NFTs and inventory
           refetchNFTs();
           refetch();
+          setShowChestDialog(false); // only close on success
         } else {
           toast.error('Chest open failed');
         }
       } catch (err: any) {
         setVerifyingTx(false);
-        toast.error('Chest open failed', { description: err?.message || String(err) });
+        const rawMsg = err?.reason || err?.error?.message || err?.message || String(err);
+        const m = String(rawMsg).match(/reverted: ?"([^"]+)"/i);
+        const reason = m ? m[1] : rawMsg;
+        toast.error('Failed to open a chest', { description: reason });
+        // Keep dialog open so user can redeem OG code or retry
       }
-      setShowChestDialog(false);
     } catch (error: any) {
       setTransferInProgress(false);
       setVerifyingTx(false);
@@ -246,8 +258,6 @@ export default function Shop() {
               </div>
               <Button
                 onClick={() => setShowChestDialog(true)}
-                disabled={Number(tfBalance) < chestTotal}
-                title={Number(tfBalance) < chestTotal ? `Insufficient TF: need ${chestTotal.toLocaleString()} TF` : undefined}
                 className="bg-[#C43B3B] hover:bg-[#A83232] dark:bg-[#EF4444] dark:hover:bg-[#DC2626] text-white gap-2"
               >
                 <Gift className="w-4 h-4" />
