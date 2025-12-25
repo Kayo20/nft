@@ -33,7 +33,7 @@ async function main() {
     }
 
     console.log(`Creating default land for ${owner}...`);
-    const newLand = { owner: owner, season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() };
+    const newLand = { owner: owner, season: 0, name: 'Land 1', slots: 9, created_at: new Date().toISOString() };
     const { data: created, error: createErr } = await supabase.from('lands').insert([newLand]).select();
     if (createErr || !created || created.length === 0) {
       console.error('Failed to create land for', owner, createErr);

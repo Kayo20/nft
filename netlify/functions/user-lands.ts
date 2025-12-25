@@ -49,7 +49,7 @@ export const handler: Handler = async (event) => {
           .from("lands")
           .select("*")
           .eq("owner", address)
-          .order("createdAt", { ascending: true });
+          .order("created_at", { ascending: true });
         if (landsErr) {
           console.warn('Supabase query for lands failed:', landsErr);
           warning = 'Failed to query lands from DB';
@@ -66,7 +66,7 @@ export const handler: Handler = async (event) => {
               season: 0,
               name: "Land 1",
               slots: 9,
-              createdAt: new Date().toISOString(),
+              created_at: new Date().toISOString(),
             };
             const { data: created, error: insertErr } = await supabase
               .from("lands")
@@ -121,7 +121,7 @@ export const handler: Handler = async (event) => {
           season: land.season || 0,
           name: land.name,
           slots: land.slots || 9,
-          createdAt: land.createdAt,
+          createdAt: land.created_at || land.createdAt,
         })),
         persisted,
         warning,

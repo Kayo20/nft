@@ -32,7 +32,7 @@ export const handler: Handler = async (event) => {
       season: 0,
       name: 'Land 1',
       slots,
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     };
 
     if (!supabase) {
@@ -73,7 +73,8 @@ export const handler: Handler = async (event) => {
       }
 
       // Ensure land_slots exist (upsert ensures idempotency)
-      const slotInserts = Array.from({ length: slots }).map((_, i) => ({ land_id: created.id, slot_index: i, nft_id: null }));
+      const now = new Date().toISOString();
+      const slotInserts = Array.from({ length: slots }).map((_, i) => ({ land_id: created.id, slot_index: i, nft_id: null, created_at: now, updated_at: now }));
       try {
         const { error: slotsErr } = await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['land_id', 'slot_index'] });
         if (slotsErr) console.warn('Failed to upsert land_slots rows:', slotsErr);

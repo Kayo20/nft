@@ -13,7 +13,7 @@ vi.mock('@supabase/supabase-js', () => ({
     from: (table: string) => {
       if (table === 'lands') return {
         select: () => ({ eq: () => ({ order: () => ({ catch: async () => ({ data: [] }) }) }) }),
-        insert: () => ({ select: async () => ({ data: [{ id: 1, owner: '0xabc', season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() }] }) })
+        insert: () => ({ select: async () => ({ data: [{ id: 1, owner: '0xabc', season: 0, name: 'Land 1', slots: 9, created_at: new Date().toISOString() }] }) })
       };
       return { select: () => ({ eq: () => ({ single: async () => ({ data: null }) }) }) };
     }
