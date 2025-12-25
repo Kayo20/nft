@@ -130,6 +130,28 @@ export const handler: Handler = async (event) => {
         if (!updated || updated.length === 0) {
           await supabase.from('land_slots').insert([{ land_id: landId, slot_index: slotIndex, nft_id: null }]);
         }
+
+        // Fetch persisted row
+        const { data: row } = await supabase
+          .from('land_slots')
+          .select('*')
+          .eq('land_id', landId)
+          .eq('slot_index', slotIndex)
+          .single()
+          .catch(() => ({ data: null }));
+
+        const persistedNftId = row ? row.nft_id : null;
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: true,
+            slot: {
+              index: slotIndex,
+              nftId: persistedNftId ?? null,
+            },
+          }),
+        };
       } catch (e) {
         console.error('Failed to remove nft from slot:', e);
         return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to remove slot' }) };
@@ -147,23 +169,25 @@ export const handler: Handler = async (event) => {
           console.error('Failed to upsert slot:', upsertErr);
           return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to upsert slot' }) };
         }
+
+        const persisted = (upserted && upserted[0]) ? upserted[0] : null;
+        const persistedNftId = persisted ? persisted.nft_id : null;
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: true,
+            slot: {
+              index: slotIndex,
+              nftId: persistedNftId ?? null,
+            },
+          }),
+        };
       } catch (e) {
         console.error('Failed to upsert slot:', e);
         return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to upsert slot' }) };
       }
     }
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        ok: true,
-        slot: {
-          index: slotIndex,
-          nftId: nftId ?? null,
-        },
-      }),
-    };
   } catch (err: any) {
     console.error("land-update-slots error", err);
     return { statusCode: 500, headers, body: JSON.stringify({ error: "internal server error" }) };

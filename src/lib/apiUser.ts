@@ -59,6 +59,20 @@ export async function getUserLands() {
   return data.lands || [];
 }
 
+// Create a default land for the current user (server will use session to determine owner)
+export async function createUserLand() {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/.netlify/functions/land-create`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) throw new Error('Failed to create land');
+  const data = await res.json();
+  return data.land || null;
+}
+
 // Land Details
 export async function getLandDetails(landId: number | string) {
   const baseUrl = getBaseUrl();

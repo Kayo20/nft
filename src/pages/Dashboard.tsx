@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LandSlots } from '@/components/dashboard/LandSlots';
 import { SeasonBadge } from '@/components/dashboard/SeasonBadge';
-import { getUserBalances, getUserLands as getUserLandsApi, updateLandSlot as updateLandSlotApi } from '@/lib/apiUser';
+import { getUserBalances, getUserLands as getUserLandsApi, updateLandSlot as updateLandSlotApi, createUserLand as createUserLandApi } from '@/lib/apiUser';
 import { motion } from 'framer-motion';
 import {
   TreePine,
@@ -202,11 +202,17 @@ export default function Dashboard() {
         // Persist to Supabase if we have a land
         if (currentLandId) {
           try {
-            await updateSlot({ slotIndex, nftId: availableNFT.id });
-            // Optimistically update the UI immediately so the NFT shows as planted
+            const res = await updateSlot({ slotIndex, nftId: availableNFT.id });
+            const persistedNftId = res?.slot?.nftId ?? null;
+            if (persistedNftId === null) {
+              toast.error('Failed to persist NFT to DB');
+              return;
+            }
+            // Use persisted id to update local UI
+            const nftObj = allNFTs.find(n => n.id === persistedNftId) || { id: persistedNftId, rarity: 'Uncommon', power: 0 };
             setLandSlots(prev => {
               const copy = [...prev];
-              copy[slotIndex] = { ...availableNFT, slotIndex } as any;
+              copy[slotIndex] = { ...nftObj, slotIndex } as any;
               return copy;
             });
             // Refresh to ensure DB is reflected
@@ -221,10 +227,21 @@ export default function Dashboard() {
           }
         }
 
-        // If no current land, ask backend to create default land (user-lands will insert default) and then persist
+        // If no current land, ask backend to create default land (user-lands will insert default). If the returned land is a local fallback, explicitly request a persisted land and then persist the slot.
         try {
           const newLands = await getUserLandsApi();
-          const newLand = (newLands && newLands.length > 0) ? newLands[0] : null;
+          let newLand = (newLands && newLands.length > 0) ? newLands[0] : null;
+
+          // If the returned land is an in-memory fallback (id starts with 'local-') try creating a persistent land
+          if (!newLand || String(newLand.id).startsWith('local-')) {
+            try {
+              const created = await createUserLandApi();
+              if (created && created.id) newLand = created;
+            } catch (createErr) {
+              console.warn('createUserLand failed', createErr);
+            }
+          }
+
           if (newLand && newLand.id) {
             // Persist directly via API helper (we don't have mutate for this new land id)
             await updateLandSlotApi(newLand.id, slotIndex, availableNFT.id);
@@ -373,8 +390,13 @@ export default function Dashboard() {
                       return;
                     }
                     try {
-                      await updateSlot({ slotIndex, nftId: null });
-                      // Optimistically update local UI and refresh server data
+                      const res = await updateSlot({ slotIndex, nftId: null });
+                      const persistedNftId = res?.slot?.nftId ?? null;
+                      if (persistedNftId !== null) {
+                        toast.error('Failed to remove tree from DB');
+                        return;
+                      }
+                      // Update local UI and refresh server data
                       setLandSlots(prev => prev.map((s,i) => i===slotIndex? undefined: s));
                       try { await refetchLands(); } catch (e) { /* ignore */ }
                       try { await refetchLandDetails(); } catch (e) { /* ignore */ }

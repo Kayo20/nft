@@ -118,8 +118,13 @@ export default function Inventory() {
         return;
       }
 
-      await updateSlot({ slotIndex, nftId: nftToPlant.id });
-      toast.success(`Planted Tree ${nftToPlant.id} in slot ${slotIndex + 1}`);
+      const res = await updateSlot({ slotIndex, nftId: nftToPlant.id });
+      const persistedNftId = res?.slot?.nftId ?? null;
+      if (persistedNftId === null) {
+        toast.error('Failed to persist planted tree');
+        return;
+      }
+      toast.success(`Planted Tree ${persistedNftId} in slot ${slotIndex + 1}`);
 
       // Refresh backend data
       refetchLandDetails();
