@@ -53,6 +53,16 @@ export async function openChest(type: string = 'standard', txHash?: string) {
   return res.json();
 }
 
+export async function checkTfTransfer() {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/.netlify/functions/check-tf-transfer`, { credentials: 'include' });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`check-tf-transfer failed: ${txt}`);
+  }
+  return res.json();
+}
+
 export async function purchaseItem(itemId: string, qty: number, txHash?: string) {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/.netlify/functions/shop-purchase`, {

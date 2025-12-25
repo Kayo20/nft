@@ -34,6 +34,10 @@ export default function Shop() {
   const [giftCode, setGiftCode] = useState('');
   const [validatingCode, setValidatingCode] = useState(false);
 
+  const [diagLoading, setDiagLoading] = useState(false);
+  const [diagResult, setDiagResult] = useState<any | null>(null);
+  const [diagError, setDiagError] = useState<string | null>(null);
+
   const handlePurchase = async (itemId: string) => {
     setPurchasingItem(itemId);
     
@@ -165,6 +169,20 @@ export default function Shop() {
       toast.error('Failed to redeem gift code');
     } finally {
       setValidatingCode(false);
+    }
+  };
+
+  const runTransferDiagnostic = async () => {
+    setDiagLoading(true);
+    setDiagError(null);
+    try {
+      const res = await (await import('@/lib/api')).checkTfTransfer();
+      setDiagResult(res);
+    } catch (err: any) {
+      setDiagError(err?.message || String(err));
+      setDiagResult(null);
+    } finally {
+      setDiagLoading(false);
     }
   };
 
@@ -406,6 +424,25 @@ export default function Shop() {
                 >
                   {validatingCode ? 'Validating...' : 'Redeem'}
                 </Button>
+              </div>
+
+              {/* Transfer diagnostic */}
+              <div className="mt-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Having trouble with token transfers? Run a transfer diagnostic to check common restrictions.</p>
+                <div className="flex items-center gap-2">
+                  <Button onClick={runTransferDiagnostic} disabled={diagLoading} className="bg-[#0F5F3A] dark:bg-[#22C55E] text-white">
+                    {diagLoading ? 'Checking...' : 'Run Transfer Diagnostic'}
+                  </Button>
+                  {diagResult && (
+                    <div className="text-sm text-gray-700 dark:text-gray-300 ml-3">
+                      {diagResult.checks?.paused ? <div>Token contract is <strong>paused</strong></div> : null}
+                      {diagResult.checks?.userBlacklisted ? <div>Your wallet is <strong>restricted/blacklisted</strong></div> : null}
+                      {diagResult.checks?.gameBlacklisted ? <div>Game wallet is <strong>restricted/blacklisted</strong></div> : null}
+                      {!diagResult.checks?.paused && !diagResult.checks?.userBlacklisted && !diagResult.checks?.gameBlacklisted && <div>No obvious transfer restrictions detected.</div>}
+                    </div>
+                  )}
+                  {diagError && <div className="text-sm text-red-500 ml-3">{diagError}</div>}
+                </div>
               </div>
             </div>
           </div>
