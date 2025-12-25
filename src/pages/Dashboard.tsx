@@ -220,9 +220,10 @@ export default function Dashboard() {
             try { await refetchLandDetails(); } catch (e) { /* ignore */ }
             toast.success('NFT planted to land and saved!');
             return;
-          } catch (e) {
+          } catch (e: any) {
             console.error('Failed to update slot:', e);
-            toast.error('Failed to plant NFT to land');
+            const msg = e?.message || JSON.stringify(e) || 'Failed to plant NFT to land';
+            toast.error(`Failed to plant NFT: ${msg}`);
             return;
           }
         }
@@ -257,9 +258,10 @@ export default function Dashboard() {
             toast.success('NFT planted to your land and saved!');
             return;
           }
-        } catch (e) {
+        } catch (e: any) {
           console.warn('Failed to create default land or persist slot:', e);
-          toast.error('Failed to persist NFT to your account.');
+          const msg = e?.message || JSON.stringify(e) || 'Failed to persist NFT to your account.';
+          toast.error(`Failed to persist NFT: ${msg}`);
           return;
         }
 

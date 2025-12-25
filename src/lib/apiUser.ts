@@ -68,9 +68,14 @@ export async function createUserLand() {
     credentials: 'include',
     body: JSON.stringify({}),
   });
-  if (!res.ok) throw new Error('Failed to create land');
-  const data = await res.json();
-  return data.land || null;
+  const text = await res.text();
+  let body: any = null;
+  try { body = JSON.parse(text); } catch { body = { text }; }
+  if (!res.ok) {
+    const msg = body?.error || body?.message || body?.text || 'Failed to create land';
+    throw new Error(msg);
+  }
+  return body.land || null;
 }
 
 // Land Details
@@ -92,6 +97,12 @@ export async function updateLandSlot(landId: number | string, slotIndex: number,
     credentials: 'include',
     body: JSON.stringify({ slotIndex, nftId }),
   });
-  if (!res.ok) throw new Error('Failed to update slot');
-  return res.json();
+  const text = await res.text();
+  let body: any = null;
+  try { body = JSON.parse(text); } catch { body = { text }; }
+  if (!res.ok) {
+    const msg = body?.error || body?.message || body?.text || 'Failed to update slot';
+    throw new Error(msg);
+  }
+  return body;
 }
