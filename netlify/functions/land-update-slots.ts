@@ -49,24 +49,47 @@ export const handler: Handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "invalid slotIndex" }) };
     }
 
-    // Extract landId from path
-    const pathSegments = event.path.split('/');
-    const landId = pathSegments[pathSegments.length - 2];
+    // Extract landId from path (support multiple possible shapes)
+    const pathSegments = (event.path || '').split('/').filter(Boolean);
+    let landId = pathSegments[pathSegments.length - 2] || pathSegments[pathSegments.length - 1] || (event.queryStringParameters && event.queryStringParameters.landId) || null;
 
+    // If it's the literal string 'land' or missing, it's invalid
     if (!landId || landId === 'land') {
+      console.warn('land-update-slots: invalid landId parsed', { path: event.path, parsed: landId });
       return { statusCode: 400, headers, body: JSON.stringify({ error: "missing landId" }) };
     }
 
-    // Verify land ownership
+    // Normalize landId (try numeric conversion when appropriate)
+    const landIdNum = Number(landId);
+    const landIdToQuery: any = Number.isFinite(landIdNum) && String(landIdNum) !== 'NaN' ? landIdNum : landId;
+
+    // Verify land ownership — first try matching id+owner
     const { data: land, error: landErr } = await supabase
       .from("lands")
       .select("*")
-      .eq("id", landId)
+      .eq("id", landIdToQuery)
       .eq("owner", address)
       .single();
-    if (landErr) console.warn('land-update-slots: land fetch error', landErr.message || landErr);
+    if (landErr) console.warn('land-update-slots: land fetch error', landErr.message || landErr, { landId: landIdToQuery, address });
 
+    // If not found, try to detect if the land exists but owner mismatch (to return clearer error)
     if (!land) {
+      try {
+        const { data: found, error: foundErr } = await supabase
+          .from('lands')
+          .select('*')
+          .eq('id', landIdToQuery)
+          .single();
+        if (foundErr) console.warn('land-update-slots: fallback land lookup error', foundErr.message || foundErr, { landId: landIdToQuery });
+        if (found) {
+          console.warn('land-update-slots: owner mismatch when attempting update', { landId: landIdToQuery, owner: found.owner, address });
+          return { statusCode: 403, headers, body: JSON.stringify({ error: 'forbidden: not owner of land' }) };
+        }
+      } catch (e) {
+        console.warn('land-update-slots: error during fallback lookup', e);
+      }
+
+      console.warn('land-update-slots: land not found', { landId: landIdToQuery, address });
       return { statusCode: 404, headers, body: JSON.stringify({ error: "land not found" }) };
     }
 
