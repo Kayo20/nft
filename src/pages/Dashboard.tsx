@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LandSlots } from '@/components/dashboard/LandSlots';
 import { SeasonBadge } from '@/components/dashboard/SeasonBadge';
-import { getUserBalances, getUserLands as getUserLandsApi, updateLandSlot as updateLandSlotApi, createUserLand as createUserLandApi } from '@/lib/apiUser';
+import { getUserBalances, getUserLands as getUserLandsApi, getUserLandsDetailed as getUserLandsDetailedApi, updateLandSlot as updateLandSlotApi, createUserLand as createUserLandApi } from '@/lib/apiUser';
 import { motion } from 'framer-motion';
 import {
   TreePine,
@@ -228,18 +228,31 @@ export default function Dashboard() {
           }
         }
 
-        // If no current land, ask backend to create default land (user-lands will insert default). If the returned land is a local fallback, explicitly request a persisted land and then persist the slot.
+        // If no current land, ask backend to create default land (user-lands will insert default).
         try {
-          const newLands = await getUserLandsApi();
-          let newLand = (newLands && newLands.length > 0) ? newLands[0] : null;
+          const newLandsResp = await getUserLandsDetailedApi();
+          if (newLandsResp.warning) {
+            console.warn('user-lands warning:', newLandsResp.warning);
+            toast.error(`Server warning: ${newLandsResp.warning}`);
+          }
 
-          // If the returned land is an in-memory fallback (id starts with 'local-') try creating a persistent land
-          if (!newLand || String(newLand.id).startsWith('local-')) {
+          let newLand = (newLandsResp.lands && newLandsResp.lands.length > 0) ? newLandsResp.lands[0] : null;
+
+          // If the returned land is an in-memory fallback (id starts with 'local-') or persisted is false try creating a persistent land
+          if (!newLand || String(newLand.id).startsWith('local-') || newLandsResp.persisted === false) {
             try {
               const created = await createUserLandApi();
-              if (created && created.id) newLand = created;
-            } catch (createErr) {
+              if (created && created.id) {
+                newLand = created;
+              } else {
+                // no persisted land created
+                toast.error('Server failed to create a persisted land for your account. Please check server logs or contact support.');
+                return;
+              }
+            } catch (createErr: any) {
               console.warn('createUserLand failed', createErr);
+              toast.error(`Failed to create land: ${createErr?.message || String(createErr)}`);
+              return;
             }
           }
 

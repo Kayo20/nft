@@ -59,6 +59,26 @@ export async function getUserLands() {
   return data.lands || [];
 }
 
+// User Lands (detailed) — returns lands plus metadata about persistence and warnings
+export async function getUserLandsDetailed() {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/.netlify/functions/user-lands`, {
+    credentials: 'include',
+  });
+  const text = await res.text();
+  let body: any = null;
+  try { body = JSON.parse(text); } catch { body = { text }; }
+  if (!res.ok) {
+    const msg = body?.error || body?.message || body?.text || 'Failed to fetch lands';
+    throw new Error(msg);
+  }
+  return {
+    lands: body.lands || [],
+    persisted: body.persisted ?? (body.lands && body.lands.length > 0 && !String(body.lands[0].id).startsWith('local-')),
+    warning: body.warning || null,
+  };
+}
+
 // Create a default land for the current user (server will use session to determine owner)
 export async function createUserLand() {
   const baseUrl = getBaseUrl();

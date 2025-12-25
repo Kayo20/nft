@@ -40,6 +40,8 @@ export const handler: Handler = async (event) => {
     // Fetch lands for this user
     // For now, we'll create a default land if none exists
     let landsList: any[] = [];
+    let persisted = false;
+    let warning: string | null = null;
 
     try {
       if (supabase) {
@@ -50,6 +52,7 @@ export const handler: Handler = async (event) => {
           .order("createdAt", { ascending: true })
           .catch((e: any) => {
             console.warn('Supabase query for lands failed:', e);
+            warning = 'Failed to query lands from DB';
             return { data: [] };
           });
 
@@ -65,38 +68,51 @@ export const handler: Handler = async (event) => {
               slots: 9,
               createdAt: new Date().toISOString(),
             };
-            const { data: created } = await supabase
+            const { data: created, error: insertErr } = await supabase
               .from("lands")
               .insert([newLand])
               .select()
               .catch((e: any) => {
                 console.warn('Supabase insert for default land failed:', e);
+                warning = 'Failed to insert default land';
                 return { data: [] };
               });
 
+            if (insertErr) {
+              warning = `Insert error: ${String(insertErr)}`;
+            }
+
             if (created && created.length > 0) {
               landsList = created;
+              persisted = true;
             } else {
               // If insert failed, fallback to in-memory default
+              warning = warning || 'Falling back to local in-memory land';
               landsList = [ { id: `local-${Date.now()}`, ...newLand } ];
             }
           } catch (e) {
             console.warn('Failed to create default land (exception):', e);
+            warning = `Exception creating default land: ${String(e)}`;
             landsList = [ { id: `local-${Date.now()}`, owner: address, season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() } ];
           }
+        } else {
+          // We have an existing land; assume persisted
+          persisted = true;
         }
       } else {
         // Supabase not configured (likely in a lightweight environment). Return an in-memory default land instead of erroring.
         console.warn('Supabase client not configured - using in-memory fallback for lands');
+        warning = 'Supabase client not configured - using local fallback';
         landsList = [ { id: `local-${Date.now()}`, owner: address, season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() } ];
       }
     } catch (e) {
       console.error('Unexpected error while fetching/creating lands:', e);
+      warning = warning || `Unexpected error: ${String(e)}`;
       // Fall back to empty lands list to avoid returning 500 to clients
       landsList = [];
     }
 
-    console.debug('Returning lands count', landsList.length);
+    console.debug('Returning lands count', landsList.length, { persisted, warning });
 
     return {
       statusCode: 200,
@@ -111,6 +127,8 @@ export const handler: Handler = async (event) => {
           slots: land.slots || 9,
           createdAt: land.createdAt,
         })),
+        persisted,
+        warning,
       }),
     };
   } catch (err: any) {
