@@ -30,12 +30,12 @@ export const handler: Handler = async (event) => {
     let tfBalance = 0;
     try {
       if (supabase) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("users")
           .select("profile")
           .eq("wallet_address", address)
-          .single()
-          .catch(() => ({ data: null }));
+          .single();
+        if (error) console.warn('user-balances: profile fetch error', error.message || error);
 
         if (data && data.profile && data.profile.tfBalance !== undefined) {
           tfBalance = data.profile.tfBalance;

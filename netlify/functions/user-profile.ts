@@ -27,21 +27,21 @@ export const handler: Handler = async (event) => {
     const address = session.address;
 
     // Fetch user NFTs to calculate stats
-    const { data: nfts } = await supabase
+    const { data: nfts, error: nftsErr } = await supabase
       .from("nfts")
       .select("*")
-      .eq("owner", address)
-      .catch(() => ({ data: [] }));
+      .eq("owner", address);
+    if (nftsErr) console.warn('user-profile: nfts fetch error', nftsErr.message || nftsErr);
 
     const nftList = nfts || [];
 
     // Fetch user profile
-    const { data: userProfile } = await supabase
+    const { data: userProfile, error: userProfileErr } = await supabase
       .from("users")
       .select("*")
       .eq("wallet_address", address)
-      .single()
-      .catch(() => ({ data: null }));
+      .single();
+    if (userProfileErr) console.warn('user-profile: user profile fetch error', userProfileErr.message || userProfileErr);
 
     // Calculate stats from NFTs
     const totalTrees = nftList.length;

@@ -45,18 +45,18 @@ export const handler: Handler = async (event) => {
 
     try {
       if (supabase) {
-        const { data: lands } = await supabase
+        const { data: lands, error: landsErr } = await supabase
           .from("lands")
           .select("*")
           .eq("owner", address)
-          .order("createdAt", { ascending: true })
-          .catch((e: any) => {
-            console.warn('Supabase query for lands failed:', e);
-            warning = 'Failed to query lands from DB';
-            return { data: [] };
-          });
-
-        landsList = lands || [];
+          .order("createdAt", { ascending: true });
+        if (landsErr) {
+          console.warn('Supabase query for lands failed:', landsErr);
+          warning = 'Failed to query lands from DB';
+          landsList = [];
+        } else {
+          landsList = lands || [];
+        }
 
         // If no lands exist, create a default one (season 0, land 1)
         if (landsList.length === 0) {
@@ -71,15 +71,11 @@ export const handler: Handler = async (event) => {
             const { data: created, error: insertErr } = await supabase
               .from("lands")
               .insert([newLand])
-              .select()
-              .catch((e: any) => {
-                console.warn('Supabase insert for default land failed:', e);
-                warning = 'Failed to insert default land';
-                return { data: [] };
-              });
+              .select();
 
             if (insertErr) {
-              warning = `Insert error: ${String(insertErr)}`;
+              console.warn('Supabase insert for default land failed:', insertErr);
+              warning = 'Failed to insert default land';
             }
 
             if (created && created.length > 0) {

@@ -34,35 +34,37 @@ export const handler: Handler = async (event) => {
     }
 
     // Fetch land (verify ownership)
-    const { data: land } = await supabase
+    const { data: land, error: landErr } = await supabase
       .from("lands")
       .select("*")
       .eq("id", landId)
       .eq("owner", address)
-      .single()
-      .catch(() => ({ data: null }));
+      .single();
+    if (landErr) console.warn('land-details: land fetch error', landErr.message || landErr);
 
     if (!land) {
       return { statusCode: 404, headers, body: JSON.stringify({ error: "land not found" }) };
     }
 
     // Fetch land slots for this land (DB uses snake_case)
-    const { data: slots } = await supabase
+    const { data: slots, error: slotsErr } = await supabase
       .from("land_slots")
       .select("*")
       .eq("land_id", landId)
-      .order("slot_index", { ascending: true })
-      .catch(() => ({ data: [] }));
+      .order("slot_index", { ascending: true });
+    if (slotsErr) {
+      console.warn('land-details: slots fetch error', slotsErr.message || slotsErr);
+    }
 
     // If any slots reference NFTs, fetch those NFT records to include details
     const nftIds = (slots || []).map((s: any) => s.nft_id).filter((id: any) => id !== null && id !== undefined);
     let nftMap: Record<string, any> = {};
     if (nftIds.length > 0) {
-      const { data: nftRows } = await supabase
+      const { data: nftRows, error: nftRowsErr } = await supabase
         .from('nfts')
         .select('id, owner_address, rarity, power, daily_yield, image_url, metadata')
-        .in('id', nftIds)
-        .catch(() => ({ data: [] }));
+        .in('id', nftIds);
+      if (nftRowsErr) console.warn('land-details: nft rows fetch error', nftRowsErr.message || nftRowsErr);
       nftMap = (nftRows || []).reduce((acc: any, r: any) => { acc[r.id] = r; return acc; }, {});
     }
 

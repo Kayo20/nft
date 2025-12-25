@@ -42,14 +42,13 @@ export const handler: Handler = async (event) => {
     // Try Supabase first, fallback to in-memory store
     try {
       if (supabase) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('nonces')
           .select('nonce, expires_at')
           .eq('address', addr)
-          .single()
-          .catch(() => ({ data: null }));
+          .single();
         
-        if (data && data.nonce && data.expires_at) {
+        if (!error && data && data.nonce && data.expires_at) {
           const expires = new Date(data.expires_at).getTime();
           if (expires > now) {
             return { statusCode: 200, headers, body: JSON.stringify({ nonce: data.nonce }) };
@@ -78,8 +77,8 @@ export const handler: Handler = async (event) => {
     try {
       if (supabase) {
         const expiresAtIso = new Date(expiresAt).toISOString();
-        const up = await supabase.from('nonces').upsert({ address: addr, nonce, expires_at: expiresAtIso }, { onConflict: ['address'] }).catch(() => ({ error: true }));
-        if (up && !up.error) persistedToDb = true;
+        const { error: upError } = await supabase.from('nonces').upsert({ address: addr, nonce, expires_at: expiresAtIso }, { onConflict: ['address'] });
+        if (!upError) persistedToDb = true;
       }
     } catch (e) {
       console.warn('Failed to persist nonce to Supabase, using memory store:', e);

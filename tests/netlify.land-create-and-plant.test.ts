@@ -11,7 +11,7 @@ vi.mock('../netlify/functions/_utils/auth', () => ({
 
 // Mock Supabase client behavior with a simple in-memory store
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: () => {
+  createClient: (() => {
     const store: any = {
       lands: [],
       land_slots: [],
@@ -47,34 +47,34 @@ vi.mock('@supabase/supabase-js', () => ({
             return { data: found };
           }
           return { data: null };
-        }.bind({ parent: null }),
-        insert: async function (this: any, payload: any) {
+        }, 
+        insert: function (this: any, payload: any) {
           const parent = this.parent;
           const table = parent.lastTable;
           if (table === 'lands') {
             const created = payload.map((p:any, i:number) => ({ ...p, id: parent.lands.length + 1 + i }));
             parent.lands.push(...created);
-            return { data: created };
+            return { select: async () => ({ data: created }) };
           }
           if (table === 'land_slots') {
             const created = payload.map((p:any) => ({ ...p }));
             parent.land_slots.push(...created);
-            return { data: created };
+            return { select: async () => ({ data: created }) };
           }
           if (table === 'nfts') {
             const created = payload.map((p:any) => ({ ...p }));
             parent.nfts.push(...created);
-            return { data: created };
+            return { select: async () => ({ data: created }) };
           }
-          return { data: payload };
-        }.bind({ parent: null }),
+          return { select: async () => ({ data: payload }) };
+        },
         upsert: function (this: any, payload: any, opts?: any) {
           const parent = this.parent;
           const table = parent.lastTable;
           if (table === 'land_slots') {
             // simple upsert based on land_id+slot_index
             const row = payload[0];
-            const existing = parent.land_slots.find((r:any) => r.land_id === row.land_id && r.slot_index === row.slot_index);
+            const existing = parent.land_slots.find((r:any) => String(r.land_id) === String(row.land_id) && r.slot_index === row.slot_index);
             if (existing) {
               existing.nft_id = row.nft_id;
               return { select: async () => ({ data: [existing] }) };
@@ -84,7 +84,7 @@ vi.mock('@supabase/supabase-js', () => ({
             return { select: async () => ({ data: [inserted] }) };
           }
           return { select: async () => ({ data: payload }) };
-        }.bind({ parent: null }),
+        },
         update: function (this: any, changes: any) {
           const parent = this.parent;
           const table = parent.lastTable;
@@ -114,8 +114,8 @@ vi.mock('@supabase/supabase-js', () => ({
     store.chain.upsert = store.chain.upsert.bind({ parent: store });
     store.chain.update = store.chain.update.bind({ parent: store });
 
-    return store;
-  }
+    return () => store;
+  })()
 }));
 
 describe('land-create and persist flow', () => {

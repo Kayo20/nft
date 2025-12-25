@@ -28,18 +28,32 @@ async function main() {
   for (const u of users) {
     const addr = u.wallet_address;
     // check if land exists
-    const { data: lands } = await supabase.from('lands').select('*').eq('owner', addr).limit(1).catch(() => ({ data: [] }));
+    const { data: lands, error: landsErr } = await supabase.from('lands').select('*').eq('owner', addr).limit(1);
+    if (landsErr) {
+      console.error('land lookup failed for', addr, landsErr);
+      continue;
+    }
     if (lands && lands.length > 0) continue; // already has land
 
     console.log('User %s has no land, creating default land', addr);
     if (!dryRun) {
       const defaultLand = { owner: addr, season: 0, name: 'Land 1', slots: 9 };
-      const { data: upserted } = await supabase.from('lands').upsert(defaultLand, { onConflict: ['owner'] }).select().catch((e) => { console.error('land upsert failed for', addr, e); return { data: null }; });
-      const landRow = (upserted && upserted.length) ? upserted[0] : (await supabase.from('lands').select('*').eq('owner', addr).single().catch(() => ({ data: null }))).data;
+      const { data: upserted, error: upsertErr } = await supabase.from('lands').upsert(defaultLand, { onConflict: ['owner'] }).select();
+      if (upsertErr) {
+        console.error('land upsert failed for', addr, upsertErr);
+      }
+      const { data: singleData, error: singleErr } = await supabase.from('lands').select('*').eq('owner', addr).single();
+      if (singleErr) {
+        console.error('land lookup failed for', addr, singleErr);
+      }
+      const landRow = (upserted && upserted.length) ? upserted[0] : singleData;
       if (landRow && landRow.id) {
         const slotInserts = [];
         for (let i = 0; i < (landRow.slots || 9); i++) slotInserts.push({ land_id: landRow.id, slot_index: i });
-        await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['land_id', 'slot_index'] }).select().catch((e) => { console.error('failed to upsert slots for', addr, e); });
+        const { error: slotsErr } = await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['land_id', 'slot_index'] });
+        if (slotsErr) {
+          console.error('failed to upsert slots for', addr, slotsErr);
+        }
         createdLands++;
       }
     }

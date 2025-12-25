@@ -11,7 +11,10 @@ vi.mock('../netlify/functions/_utils/auth', () => ({
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     from: (table: string) => {
-      if (table === 'lands') return { select: () => ({ eq: () => ({ order: () => ({ catch: async () => ({ data: [] }) }) }) }) };
+      if (table === 'lands') return {
+        select: () => ({ eq: () => ({ order: () => ({ catch: async () => ({ data: [] }) }) }) }),
+        insert: () => ({ select: async () => ({ data: [{ id: 1, owner: '0xabc', season: 0, name: 'Land 1', slots: 9, createdAt: new Date().toISOString() }] }) })
+      };
       return { select: () => ({ eq: () => ({ single: async () => ({ data: null }) }) }) };
     }
   })

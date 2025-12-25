@@ -135,8 +135,9 @@ export const handler: Handler = async (event) => {
     // Try to get nonce from Supabase first
     try {
       if (supabase) {
-        const { data } = await supabase.from("nonces").select("nonce, expires_at").eq("address", addr).single().catch(() => ({ data: null }));
-        stored = data;
+        const { data, error } = await supabase.from("nonces").select("nonce, expires_at").eq("address", addr).single();
+        stored = data ?? null;
+        if (error) console.warn('auth-verify: nonce fetch error', error.message || error);
       }
     } catch (e) {
       console.warn('Failed to fetch nonce from Supabase:', e);
@@ -220,13 +221,15 @@ export const handler: Handler = async (event) => {
         try {
           const defaultLand = { owner: addr, season: 0, name: 'Land 1', slots: 9 };
           // Use upsert on owner to avoid duplicate inserts
-          const { data: landUpserted } = await supabase.from('lands').upsert(defaultLand, { onConflict: ['owner'] }).select().catch(() => ({ data: null }));
+          const { data: landUpserted, error: landUpsertedError } = await supabase.from('lands').upsert(defaultLand, { onConflict: ['owner'] }).select();
           let landRow = (landUpserted && landUpserted.length) ? landUpserted[0] : null;
           if (!landRow) {
             // Fallback: fetch land by owner
-            const { data: found } = await supabase.from('lands').select('*').eq('owner', addr).single().catch(() => ({ data: null }));
-            landRow = found;
+            const { data: found, error: foundError } = await supabase.from('lands').select('*').eq('owner', addr).single();
+            landRow = found ?? null;
+            if (foundError) console.warn('auth-verify: land lookup error', foundError.message || foundError);
           }
+          if (landUpsertedError) console.warn('auth-verify: land upsert error', landUpsertedError.message || landUpsertedError);
 
           if (landRow && landRow.id) {
             const slots = landRow.slots || 9;
@@ -235,7 +238,8 @@ export const handler: Handler = async (event) => {
               slotInserts.push({ landId: landRow.id, slotIndex: i });
             }
             // Upsert slots to ensure they exist (on conflict landId,slotIndex do nothing)
-            await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['landId', 'slotIndex'] }).select().catch(() => ({ data: null }));
+            const { error: slotsError } = await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['landId', 'slotIndex'] });
+            if (slotsError) console.warn('auth-verify: land_slots upsert error', slotsError.message || slotsError);
           }
         } catch (e) {
           console.warn('auth-verify: failed to ensure default land for user', e?.message || e);

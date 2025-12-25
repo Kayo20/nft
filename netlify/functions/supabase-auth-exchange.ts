@@ -68,13 +68,16 @@ export const handler: Handler = async (event) => {
     // Ensure default land exists for this user (idempotent)
     try {
       const defaultLand = { owner: address, season: 0, name: 'Land 1', slots: 9 };
-      await supabase.from('lands').upsert(defaultLand, { onConflict: ['owner'] }).select().catch(() => ({ data: null }));
-      const { data: land } = await supabase.from('lands').select('*').eq('owner', address).single().catch(() => ({ data: null }));
+      const { data: upsertedLand, error: upsertLandErr } = await supabase.from('lands').upsert(defaultLand, { onConflict: ['owner'] }).select();
+      if (upsertLandErr) console.warn('supabase-auth-exchange: land upsert error', upsertLandErr.message || upsertLandErr);
+      const { data: land, error: landErr } = await supabase.from('lands').select('*').eq('owner', address).single();
+      if (landErr) console.warn('supabase-auth-exchange: land lookup error', landErr.message || landErr);
       if (land && land.id) {
         const slots = land.slots || 9;
         const slotInserts = [];
         for (let i = 0; i < slots; i++) slotInserts.push({ land_id: land.id, slot_index: i });
-        await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['land_id', 'slot_index'] }).select().catch(() => ({ data: null }));
+        const { error: slotsErr } = await supabase.from('land_slots').upsert(slotInserts, { onConflict: ['land_id', 'slot_index'] });
+        if (slotsErr) console.warn('supabase-auth-exchange: land_slots upsert error', slotsErr.message || slotsErr);
       }
     } catch (e) {
       console.warn('supabase-auth-exchange: failed to ensure default land for user', e?.message || e);

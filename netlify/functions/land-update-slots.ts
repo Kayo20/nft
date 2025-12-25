@@ -58,13 +58,13 @@ export const handler: Handler = async (event) => {
     }
 
     // Verify land ownership
-    const { data: land } = await supabase
+    const { data: land, error: landErr } = await supabase
       .from("lands")
       .select("*")
       .eq("id", landId)
       .eq("owner", address)
-      .single()
-      .catch(() => ({ data: null }));
+      .single();
+    if (landErr) console.warn('land-update-slots: land fetch error', landErr.message || landErr);
 
     if (!land) {
       return { statusCode: 404, headers, body: JSON.stringify({ error: "land not found" }) };
@@ -73,22 +73,21 @@ export const handler: Handler = async (event) => {
     // If nftId is not null, verify NFT ownership and ensure NFT record exists in the DB.
     if (nftId !== null) {
       // Try to find an NFT with matching id and owner
-      const { data: nftByOwner } = await supabase
+      const { data: nftByOwner, error: nftByOwnerErr } = await supabase
         .from("nfts")
         .select("*")
         .eq("id", nftId)
         .eq("owner_address", address)
-        .single()
-        .catch(() => ({ data: null }));
+        .single();
 
       if (!nftByOwner) {
         // NFT not found with owner match. Try to find any NFT record by id.
-        const { data: nftAny } = await supabase
+        const { data: nftAny, error: nftAnyErr } = await supabase
           .from("nfts")
           .select("*")
           .eq("id", nftId)
-          .single()
-          .catch(() => ({ data: null }));
+          .single();
+        if (nftAnyErr) console.warn('land-update-slots: nft lookup error', nftAnyErr.message || nftAnyErr);
 
         if (!nftAny) {
           // No NFT record exists — insert a minimal record so the user can plant it.
@@ -107,7 +106,8 @@ export const handler: Handler = async (event) => {
 
           // Otherwise, try to set owner to this address (repair inconsistent data)
           try {
-            await supabase.from('nfts').update({ owner_address: address }).eq('id', nftId).catch(() => {});
+            const { error: updateOwnerErr } = await supabase.from('nfts').update({ owner_address: address }).eq('id', nftId);
+            if (updateOwnerErr) console.warn('land-update-slots: failed to set owner on nft', updateOwnerErr.message || updateOwnerErr);
           } catch (e) {
             // ignore
           }
@@ -132,14 +132,13 @@ export const handler: Handler = async (event) => {
         }
 
         // Fetch persisted row
-        const { data: row } = await supabase
+        const { data: row, error: rowErr } = await supabase
           .from('land_slots')
           .select('*')
           .eq('land_id', landId)
           .eq('slot_index', slotIndex)
-          .single()
-          .catch(() => ({ data: null }));
-
+          .single();
+        if (rowErr) console.warn('land-update-slots: fetch persisted row error', rowErr.message || rowErr);
         const persistedNftId = row ? row.nft_id : null;
         return {
           statusCode: 200,

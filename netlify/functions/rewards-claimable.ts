@@ -27,11 +27,11 @@ export const handler: Handler = async (event) => {
     const address = session.address;
 
     // Fetch user's accumulated rewards from NFTs
-    const { data: nfts } = await supabase
+    const { data: nfts, error: nftsErr } = await supabase
       .from("nfts")
       .select("accumulatedRewards, dailyYield, lastFarmed")
-      .eq("owner", address)
-      .catch(() => ({ data: [] }));
+      .eq("owner", address);
+    if (nftsErr) console.warn('rewards-claimable: nfts fetch error', nftsErr.message || nftsErr);
 
     const nftList = nfts || [];
 
@@ -50,12 +50,12 @@ export const handler: Handler = async (event) => {
     });
 
     // Get last claim time
-    const { data: userProfile } = await supabase
+    const { data: userProfile, error: userProfileErr } = await supabase
       .from("users")
       .select("profile")
       .eq("wallet_address", address)
-      .single()
-      .catch(() => ({ data: null }));
+      .single();
+    if (userProfileErr) console.warn('rewards-claimable: user profile fetch error', userProfileErr.message || userProfileErr);
 
     const lastClaimAt = userProfile?.profile?.lastClaimAt ? new Date(userProfile.profile.lastClaimAt) : null;
     const now = new Date();
