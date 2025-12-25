@@ -1,4 +1,4 @@
-import { BrowserProvider, formatEther, Contract, parseUnits } from 'ethers';
+import { BrowserProvider, formatEther, Contract, parseUnits, formatUnits } from 'ethers';
 import ERC20_ABI from '@/lib/erc20Abi';
 import { BNB_CHAIN_ID } from './constants';
 
@@ -98,6 +98,25 @@ export const switchToBNB = async (): Promise<void> => {
 export const disconnectWallet = (): void => {
   // MetaMask doesn't have a disconnect method, but we can clear local state
   localStorage.removeItem('walletConnected');
+};
+
+/**
+ * Get ERC20 token balance for an address using the injected provider (MetaMask).
+ * Returns a numeric string formatted with up to 4 decimals.
+ */
+export const getERC20Balance = async (tokenAddress: string, address: string, decimals = 18): Promise<string> => {
+  if (!checkMetaMask()) throw new Error('MetaMask is not installed');
+
+  try {
+    const provider = new BrowserProvider(window.ethereum);
+    // Use provider (read-only) to avoid requiring signer for balanceOf
+    const contract = new Contract(tokenAddress, ERC20_ABI, provider);
+    const raw = await contract.balanceOf(address);
+    return parseFloat(formatUnits(raw, decimals)).toFixed(4);
+  } catch (err) {
+    console.error('Failed to fetch ERC20 balance:', err);
+    throw err;
+  }
 };
 
 /**

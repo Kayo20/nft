@@ -14,7 +14,7 @@ export default function Profile() {
   const { wallet, disconnect } = useWallet();
   const demoAddress = wallet.address || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
   const { nfts } = useNFTs(demoAddress);
-  const { tfBalance } = useUserBalances(wallet.address);
+  const { tfBalance, tfBalanceSource } = useUserBalances(wallet.address);
 
   const copyAddress = () => {
     navigator.clipboard.writeText(demoAddress);
@@ -179,6 +179,9 @@ export default function Profile() {
                 <CardTitle className="text-lg text-gray-900 dark:text-white flex items-center gap-2">
                   <Coins className="w-5 h-5 text-[#E2B13C] dark:text-[#FCD34D]" />
                   TF Token Balance
+                  <span className="ml-2 px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+                    {tfBalanceSource === 'on-chain' ? 'on-chain' : (tfBalanceSource === 'server' ? 'server' : '—')}
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
