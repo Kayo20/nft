@@ -112,3 +112,6 @@ export const TOTAL_SUPPLY = '1B TF';
 // Token contract and game wallet
 export const TF_TOKEN_CONTRACT = '0x349fd86a4a5c8d6778d1efeb1adea4337c214444';
 export const GAME_WALLET = '0x368273810a75f738eb4c4b6d00b8c37d998055b2';
+
+// URL to quick-swap TF token (PancakeSwap example)
+export const BUY_TF_LINK = `https://pancakeswap.finance/swap?outputCurrency=${TF_TOKEN_CONTRACT}`;

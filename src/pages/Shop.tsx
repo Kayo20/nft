@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { ITEMS, CHEST_PRICE, TF_TOKEN_CONTRACT, GAME_WALLET } from '@/lib/constants';
+import { ITEMS, CHEST_PRICE, TF_TOKEN_CONTRACT, GAME_WALLET, TRANSACTION_FEE_TF, BUY_TF_LINK } from '@/lib/constants';
+import { useUserBalances } from '@/hooks/useUserBalances';
 import { transferERC20 } from '@/lib/web3';
 import { ShoppingBag, Coins, Info, Gift, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,6 +23,8 @@ export default function Shop() {
   const demoAddress = wallet.address || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
   const { inventory, isLoading, purchaseItem, refetch } = useItems(demoAddress);
   const { refetch: refetchNFTs } = useNFTs(demoAddress);
+  const { tfBalance, tfBalanceSource } = useUserBalances(wallet.address);
+  const chestTotal = CHEST_PRICE + TRANSACTION_FEE_TF;
   const [purchasingItem, setPurchasingItem] = useState<string | null>(null);
   const [showChestDialog, setShowChestDialog] = useState(false);
   const [openingChest, setOpeningChest] = useState(false);
@@ -41,7 +44,14 @@ export default function Shop() {
       if (!item) throw new Error('Item not found');
 
       const total = Number(item.cost) * qty;
-      const expectedTotal = total + (await import('@/lib/constants')).TRANSACTION_FEE_TF;
+      const expectedTotal = total + TRANSACTION_FEE_TF;
+
+      // Ensure user has enough TF
+      if (Number(tfBalance) < expectedTotal) {
+        toast.error(`Insufficient TF balance: need ${expectedTotal.toLocaleString()} TF to purchase this item`);
+        setPurchasingItem(null);
+        return;
+      }
 
       // Prompt user to sign the TF transfer to the game wallet (item total + transaction fee)
       setTransferInProgress(true);
@@ -52,24 +62,26 @@ export default function Shop() {
 
       setTransferInProgress(false);
       setVerifyingTx(true);
-      const success = await purchaseItem(itemId, qty, txHash);
-      setVerifyingTx(false);
-      
-      if (success) {
-        toast.success('Purchase successful!', {
-          description: 'Item has been added to your inventory',
-        });
-      } else {
-        toast.error('Purchase failed', {
-          description: 'Please try again',
-        });
+      try {
+        const success = await purchaseItem(itemId, qty, txHash);
+        setVerifyingTx(false);
+        if (success) {
+          toast.success('Purchase successful!', {
+            description: 'Item has been added to your inventory',
+          });
+        } else {
+          toast.error('Purchase failed', {
+            description: 'Please try again',
+          });
+        }
+      } catch (err: any) {
+        setVerifyingTx(false);
+        toast.error('Purchase failed', { description: err?.message || String(err) });
       }
-    } catch (error) {
+    } catch (error: any) {
       setTransferInProgress(false);
       setVerifyingTx(false);
-      toast.error('Transaction failed', {
-        description: 'An error occurred during purchase',
-      });
+      toast.error('Transaction failed', { description: error?.message || String(error) });
     } finally {
       setPurchasingItem(null);
     }
@@ -78,31 +90,43 @@ export default function Shop() {
   const handleOpenChest = async () => {
     setOpeningChest(true);
     try {
+      // Ensure sufficient balance
+      if (Number(tfBalance) < chestTotal) {
+        toast.error(`Insufficient TF balance: need ${chestTotal.toLocaleString()} TF to open a chest`);
+        setOpeningChest(false);
+        return;
+      }
+
       // Transfer TF to game wallet for chest purchase (price + tx fee)
       setTransferInProgress(true);
       setTransferAction('chest');
       toast('Please confirm the TF transfer for chest (including transaction fee) in your wallet...', { duration: 4000 });
-      const expected = CHEST_PRICE + (await import('@/lib/constants')).TRANSACTION_FEE_TF;
+      const expected = chestTotal;
       const receipt = await transferERC20(TF_TOKEN_CONTRACT, GAME_WALLET, String(expected));
       const txHash = (receipt && (receipt.transactionHash || (receipt as any).hash)) || undefined;
 
       setTransferInProgress(false);
       setVerifyingTx(true);
-      const result = await openChest('standard', txHash);
-      setVerifyingTx(false);
-      if (result && result.nft) {
-        toast.success('Chest opened!', { description: `You received a ${result.nft.rarity} tree` });
-        // refetch NFTs and inventory
-        refetchNFTs();
-        refetch();
-      } else {
-        toast.error('Chest open failed');
+      try {
+        const result = await openChest('standard', txHash);
+        setVerifyingTx(false);
+        if (result && result.nft) {
+          toast.success('Chest opened!', { description: `You received a ${result.nft.rarity} tree` });
+          // refetch NFTs and inventory
+          refetchNFTs();
+          refetch();
+        } else {
+          toast.error('Chest open failed');
+        }
+      } catch (err: any) {
+        setVerifyingTx(false);
+        toast.error('Chest open failed', { description: err?.message || String(err) });
       }
       setShowChestDialog(false);
-    } catch (error) {
+    } catch (error: any) {
       setTransferInProgress(false);
       setVerifyingTx(false);
-      toast.error('Failed to open chest');
+      toast.error('Failed to open chest', { description: error?.message || String(error) });
     } finally {
       setOpeningChest(false);
     }
@@ -171,8 +195,8 @@ export default function Shop() {
             <Coins className="w-6 h-6 text-[#E2B13C] dark:text-[#FCD34D]" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-[#0F5F3A] dark:text-[#22C55E]">0.00 TF</div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Available for purchases</p>
+            <div className="text-4xl font-bold text-[#0F5F3A] dark:text-[#22C55E]">{Number(tfBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} TF</div>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Source: {tfBalanceSource} • <a href={BUY_TF_LINK} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#0F5F3A] dark:text-[#22C55E]">Buy TF</a></p>
           </CardContent>
         </Card>
       </motion.div>
@@ -222,6 +246,8 @@ export default function Shop() {
               </div>
               <Button
                 onClick={() => setShowChestDialog(true)}
+                disabled={Number(tfBalance) < chestTotal}
+                title={Number(tfBalance) < chestTotal ? `Insufficient TF: need ${chestTotal.toLocaleString()} TF` : undefined}
                 className="bg-[#C43B3B] hover:bg-[#A83232] dark:bg-[#EF4444] dark:hover:bg-[#DC2626] text-white gap-2"
               >
                 <Gift className="w-4 h-4" />
