@@ -222,8 +222,42 @@ export default function Dashboard() {
             return;
           } catch (e: any) {
             console.error('Failed to update slot:', e);
-            const msg = e?.message || JSON.stringify(e) || 'Failed to plant NFT to land';
-            toast.error(`Failed to plant NFT: ${msg}`);
+            const msg = e?.message || JSON.stringify(e) || '';
+
+            // If the land was deleted or not found on server (but client thought it existed), try to re-create a persisted land and retry once
+            if (String(msg).toLowerCase().includes('land not found') || String(msg).toLowerCase().includes('missing landid') || String(msg).toLowerCase().includes('forbidden: not owner')) {
+              toast.error('Land not found or not owned on server — attempting to create a new persisted land and retrying...');
+              try {
+                const created = await createUserLandApi();
+                if (created && created.id) {
+                  try {
+                    await updateLandSlotApi(created.id, slotIndex, availableNFT.id);
+                    // Refresh queries so hooks reflect DB state
+                    try { await refetchLands(); } catch (e) { /* ignore */ }
+                    try { await refetchLandDetails(); } catch (e) { /* ignore */ }
+                    setLandSlots(prev => {
+                      const copy = [...prev];
+                      copy[slotIndex] = { ...availableNFT, slotIndex } as any;
+                      return copy;
+                    });
+                    toast.success('NFT planted to your new land and saved!');
+                    return;
+                  } catch (retryErr: any) {
+                    console.error('Retry update after create failed', retryErr);
+                    toast.error(`Retry failed: ${retryErr?.message || String(retryErr)}`);
+                    return;
+                  }
+                }
+                toast.error('Failed to create persisted land for your account');
+                return;
+              } catch (createErr: any) {
+                console.error('Failed to create land after land not found:', createErr);
+                toast.error(`Failed to create persisted land: ${createErr?.message || String(createErr)}`);
+                return;
+              }
+            }
+
+            toast.error(`Failed to plant NFT: ${msg || 'Unknown error'}`);
             return;
           }
         }
