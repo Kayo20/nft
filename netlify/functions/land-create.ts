@@ -63,13 +63,13 @@ export const handler: Handler = async (event) => {
 
       if (upsertErr) {
         console.error('Failed to upsert land', upsertErr);
-        return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to create land' }) };
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to create land', details: upsertErr?.message || String(upsertErr) }) };
       }
 
       const created = (upserted && upserted[0]) ? upserted[0] : null;
       if (!created) {
         console.error('Upsert returned no land row', upserted);
-        return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to create land' }) };
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to create land', details: 'upsert returned no rows' }) };
       }
 
       // Ensure land_slots exist (upsert ensures idempotency)
@@ -88,7 +88,7 @@ export const handler: Handler = async (event) => {
       };
     } catch (e: any) {
       console.error('Failed to upsert or prepare land:', e);
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to create land' }) };
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'failed to create land', details: e?.message || String(e) }) };
     }
   } catch (err: any) {
     console.error('land-create error', err);
